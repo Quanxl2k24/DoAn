@@ -1,0 +1,44 @@
+﻿src/controllers/ghe/gheController.ts(12,16): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/ghe/gheController.ts(33,9): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | StringFilter<"GiuGhe"> | undefined'.
+  Type 'string[]' is not assignable to type 'string | StringFilter<"GiuGhe"> | undefined'.
+src/controllers/ghe/gheController.ts(43,9): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | StringFilter<"Ve"> | undefined'.
+  Type 'string[]' is not assignable to type 'string | StringFilter<"Ve"> | undefined'.
+src/controllers/ghe/gheController.ts(52,28): error TS2551: Property 'phong' does not exist on type '{ id: string; phimId: string; phongId: string; thoiGianBatDau: Date; thoiGianKetThuc: Date; }'. Did you mean 'phongId'?
+src/controllers/ghe/gheController.ts(52,44): error TS7006: Parameter 'ghe' implicitly has an 'any' type.
+src/controllers/ghe/gheController.ts(75,25): error TS2551: Property 'phong' does not exist on type '{ id: string; phimId: string; phongId: string; thoiGianBatDau: Date; thoiGianKetThuc: Date; }'. Did you mean 'phongId'?
+src/controllers/ghe/gheController.ts(76,31): error TS2551: Property 'phong' does not exist on type '{ id: string; phimId: string; phongId: string; thoiGianBatDau: Date; thoiGianKetThuc: Date; }'. Did you mean 'phongId'?
+src/controllers/phim/phimController.ts(46,58): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/phim/phimController.ts(80,62): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/phim/phimController.ts(87,16): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/phim/phimController.ts(103,62): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/phim/phimController.ts(109,41): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/phong/phongController.ts(11,16): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | StringFilter<"PhongChieu"> | undefined'.
+  Type 'string[]' is not assignable to type 'string | StringFilter<"PhongChieu"> | undefined'.
+src/controllers/phong/phongController.ts(43,68): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/phong/phongController.ts(49,16): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/phong/phongController.ts(65,68): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/phong/phongController.ts(70,47): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/rap/rapController.ts(26,16): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/rap/rapController.ts(62,66): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/rap/rapController.ts(68,16): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/rap/rapController.ts(84,66): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/rap/rapController.ts(89,45): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/suatchieu/suatChieuController.ts(89,67): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.
+src/controllers/suatchieu/suatChieuController.ts(94,46): error TS2322: Type 'string | string[] | undefined' is not assignable to type 'string | undefined'.
+  Type 'string[]' is not assignable to type 'string'.

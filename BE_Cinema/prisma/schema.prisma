@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  password     String
+  roleId       String
+  createdAt    DateTime    @default(now())
+  fullName     String?
+  phoneNumber  String?
+  refreshToken String?
+  giuGhes      GiuGhe[]
+  thanhToans   ThanhToan[]
+  role         Role        @relation(fields: [roleId], references: [id])
+  ves          Ve[]
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  permissions RolePermission[]
+  users       User[]
+}
+
+model Permission {
+  id     String           @id @default(uuid())
+  action String           @unique
+  roles  RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  role         Role       @relation(fields: [roleId], references: [id])
+
+  @@id([roleId, permissionId])
+}
+
+model RapChieu {
+  id          String       @id @default(uuid())
+  tenRap      String
+  diaChi      String
+  trangThai   String       @default("HOAT_DONG")
+  phongChieus PhongChieu[]
+}
+
+model PhongChieu {
+  id         String      @id @default(uuid())
+  rapId      String
+  tenPhong   String
+  trangThai  String      @default("HOAT_DONG")
+  ghes       Ghe[]
+  rap        RapChieu    @relation(fields: [rapId], references: [id])
+  suatChieus SuatChieu[]
+}
+
+model Phim {
+  id            String      @id @default(uuid())
+  tenPhim       String
+  moTa          String
+  posterUrl     String
+  backdropUrl   String?
+  trailerUrl    String?
+  thoiLuong     Int
+  ngayKhoiChieu DateTime
+  theLoai       String
+  ngonNgu       String
+  daoDien       String?
+  dienVien      String?
+  phanLoaiTuoi  String
+  giaCoBan      Float
+  trangThai     String      @default("DANG_CHIEU")
+  suatChieus    SuatChieu[]
+}
+
+model LoaiGhe {
+  id      String @id @default(uuid())
+  tenLoai String
+  phuPhi  Float  @default(0)
+  ghes    Ghe[]
+}
+
+model Ghe {
+  id        String     @id @default(uuid())
+  phongId   String
+  loaiGheId String
+  hang      String
+  cot       Int
+  tenGhe    String
+  trangThai String     @default("HOAT_DONG")
+  loaiGhe   LoaiGhe    @relation(fields: [loaiGheId], references: [id])
+  phong     PhongChieu @relation(fields: [phongId], references: [id])
+  giuGhes   GiuGhe[]
+  ves       Ve[]
+}
+
+model SuatChieu {
+  id              String     @id @default(uuid())
+  phimId          String
+  phongId         String
+  thoiGianBatDau  DateTime
+  thoiGianKetThuc DateTime
+  giaSuatChieu    Float?
+  giuGhes         GiuGhe[]
+  phim            Phim       @relation(fields: [phimId], references: [id])
+  phong           PhongChieu @relation(fields: [phongId], references: [id])
+  ves             Ve[]
+}
+
+model GiuGhe {
+  id             String    @id @default(uuid())
+  gheId          String
+  suatChieuId    String
+  userId         String
+  thoiGianGiu    DateTime  @default(now())
+  thoiGianHetHan DateTime
+  trangThai      String    @default("DANG_GIU")
+  ghe            Ghe       @relation(fields: [gheId], references: [id])
+  suatChieu      SuatChieu @relation(fields: [suatChieuId], references: [id])
+  user           User      @relation(fields: [userId], references: [id])
+}
+
+model ThanhToan {
+  id         String   @id @default(uuid())
+  userId     String
+  tongTien   Float
+  phuongThuc String
+  trangThai  String   @default("CHUA_THANH_TOAN")
+  thoiGian   DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+  ves        Ve[]
+}
+
+model Ve {
+  id          String     @id @default(uuid())
+  userId      String
+  suatChieuId String
+  gheId       String
+  thanhToanId String?
+  giaTien     Float
+  trangThai   String     @default("DA_DAT")
+  thoiGianDat DateTime   @default(now())
+  ghe         Ghe        @relation(fields: [gheId], references: [id])
+  suatChieu   SuatChieu  @relation(fields: [suatChieuId], references: [id])
+  thanhToan   ThanhToan? @relation(fields: [thanhToanId], references: [id])
+  user        User       @relation(fields: [userId], references: [id])
+}
