@@ -10,7 +10,7 @@ const BottomNav = () => {
     { to: '/', icon: 'movie', label: 'Khám Phá' },
     { to: '/showtimes', icon: 'confirmation_number', label: 'Đặt Vé' },
     { to: '/history', icon: 'receipt_long', label: 'Vé Của Tôi' },
-    { to: user ? '/history' : '/login', icon: 'person', label: 'Cá Nhân' },
+    { to: user ? '/profile' : '/login', icon: 'person', label: 'Cá Nhân' },
   ];
 
   return (

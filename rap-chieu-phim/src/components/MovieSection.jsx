@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import MovieCard from './MovieCard';
 
 const MovieSection = ({ title, description, linkText, movies, isUpcoming }) => {
@@ -13,9 +14,9 @@ const MovieSection = ({ title, description, linkText, movies, isUpcoming }) => {
             <p className="text-secondary opacity-70">{description}</p>
           </div>
           {linkText && (
-            <a className="text-primary-container font-bold flex items-center gap-2 hover:translate-x-1 transition-transform" href="#">
+            <Link to="/showtimes" className="text-primary-container font-bold flex items-center gap-2 hover:translate-x-1 transition-transform">
               {linkText} <span className="material-symbols-outlined">arrow_forward</span>
-            </a>
+            </Link>
           )}
         </div>
       )}

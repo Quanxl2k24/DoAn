@@ -16,7 +16,6 @@ const AdminSeatsPage = () => {
   const [loading, setLoading] = useState(true);
   
   const [selectedSeatIds, setSelectedSeatIds] = useState([]);
-  const [selectedTool, setSelectedTool] = useState('select'); // select, type, status
 
   useEffect(() => {
     if (!phongId) {
@@ -62,7 +61,9 @@ const AdminSeatsPage = () => {
         [type]: value
       };
       await api.put('/ghes/update-many', payload);
-      toast.success('Cập nhật thành công');
+      const loai = type === 'loaiGheId' ? loaiGhes.find(l => l.id === value) : null;
+      const label = loai ? loai.tenLoai : value === 'HOAT_DONG' ? 'Hoạt động' : 'Bảo trì';
+      toast.success(`Đã cập nhật ${selectedSeatIds.length} ghế thành ${label}`);
       setSelectedSeatIds([]);
       fetchData();
     } catch (err) {
@@ -98,7 +99,7 @@ const AdminSeatsPage = () => {
                 {phong?.tenPhong}
               </span>
             </div>
-            <p className="text-gray-400">Chọn ghế trên sơ đồ để thay đổi loại ghế hoặc trạng thái</p>
+            <p className="text-gray-400">Chọn ghế trên sơ đồ, sau đó bấm loại ghế muốn chuyển ở cột bên phải</p>
           </div>
           <div className="flex gap-3">
             <button onClick={selectAll} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-bold transition-all">Chọn tất cả</button>
@@ -118,6 +119,13 @@ const AdminSeatsPage = () => {
 
             {/* Grid */}
             <div className="flex-1 overflow-auto hide-scrollbar flex items-center justify-center p-4">
+              {seats.length === 0 ? (
+                <div className="text-center text-gray-400">
+                  <span className="material-symbols-outlined text-6xl mb-4 block">event_seat</span>
+                  <p className="text-lg font-bold mb-2">Chưa có ghế nào</p>
+                  <p className="text-sm">Phòng này chưa được tạo sơ đồ ghế. Vui lòng xoá và tạo lại phòng với số hàng và số cột.</p>
+                </div>
+              ) : (
               <div className="flex flex-col gap-4">
                 {rows.map((row) => (
                   <div key={row} className="flex items-center justify-center gap-4">
@@ -125,25 +133,32 @@ const AdminSeatsPage = () => {
                     <div className="flex gap-2">
                       {seats.filter(s => s.hang === row).sort((a, b) => a.cot - b.cot).map((seat) => {
                         const isSelected = selectedSeatIds.includes(seat.id);
-                        const typeColor = seat.loaiGhe.tenLoai === 'VIP' ? 'border-amber-500/50 text-amber-500' 
-                                        : seat.loaiGhe.tenLoai === 'SWEETBOX' ? 'border-pink-500/50 text-pink-500'
-                                        : 'border-white/20 text-white/40';
+                        const tenLoai = seat.loaiGhe?.tenLoai || 'THUONG';
                         
-                        const statusColor = seat.trangThai === 'BAO_TRI' ? 'bg-neutral-800 border-red-900/50 text-red-900' : 'bg-white/5';
+                        let seatClass = '';
+                        if (isSelected) {
+                          seatClass = 'bg-[#E50914] border-[#E50914] text-white shadow-[0_0_15px_rgba(229,9,20,0.4)] z-10';
+                        } else if (seat.trangThai === 'BAO_TRI') {
+                          seatClass = 'bg-neutral-800 border-red-900/50 text-red-900';
+                        } else if (tenLoai === 'VIP') {
+                          seatClass = 'border-amber-500/50 bg-amber-500/10 text-amber-500';
+                        } else if (tenLoai === 'SWEETBOX') {
+                          seatClass = 'border-pink-500/50 bg-pink-500/10 text-pink-500';
+                        } else {
+                          seatClass = 'border-white/20 bg-white/5 text-white/40';
+                        }
 
                         return (
                           <button
                             key={seat.id}
                             onClick={() => toggleSeatSelection(seat.id)}
-                            className={`w-9 h-9 rounded-lg border text-[10px] font-black flex items-center justify-center transition-all duration-200 hover:scale-110 
-                              ${isSelected ? 'bg-[#E50914] border-[#E50914] text-white shadow-[0_0_15px_rgba(229,9,20,0.4)] z-10' : `${statusColor} ${typeColor}`}
-                            `}
-                            title={`${seat.tenGhe} (${seat.loaiGhe.tenLoai})`}
+                            className={`w-9 h-9 rounded-lg border text-[10px] font-black flex items-center justify-center transition-all duration-200 hover:scale-110 ${seatClass}`}
+                            title={`${seat.tenGhe} (${tenLoai})${seat.loaiGhe?.phuPhi > 0 ? ` +${seat.loaiGhe.phuPhi.toLocaleString('vi-VN')}đ` : ''}`}
                           >
                             {seat.trangThai === 'BAO_TRI' ? (
                               <span className="material-symbols-outlined text-[16px]">block</span>
                             ) : (
-                              <span>{seat.cot}</span>
+                              <span>{seat.tenGhe}</span>
                             )}
                           </button>
                         );
@@ -153,6 +168,7 @@ const AdminSeatsPage = () => {
                   </div>
                 ))}
               </div>
+              )}
             </div>
           </div>
 
@@ -166,16 +182,43 @@ const AdminSeatsPage = () => {
               
               <div className="space-y-6">
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-3 tracking-widest">Loại ghế</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-3 tracking-widest">Đổi loại ghế</p>
                   <div className="grid grid-cols-1 gap-2">
                     {loaiGhes.map(type => (
                       <button 
                         key={type.id}
                         onClick={() => handleApplyTool('loaiGheId', type.id)}
-                        className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 hover:bg-white/10 transition-all text-sm group"
+                        className={`flex items-center justify-between p-3 rounded-xl border transition-all text-sm group ${
+                          type.tenLoai === 'VIP'
+                            ? 'bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20'
+                            : type.tenLoai === 'SWEETBOX'
+                              ? 'bg-pink-500/10 border-pink-500/30 hover:bg-pink-500/20'
+                              : 'bg-white/5 border-white/10 hover:bg-white/10'
+                        }`}
                       >
-                        <span className="text-gray-300 font-medium">{type.tenLoai}</span>
-                        <span className="text-[10px] bg-white/10 px-2 py-1 rounded text-gray-400 group-hover:text-white transition-colors">ÁP DỤNG</span>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-medium ${
+                            type.tenLoai === 'VIP' ? 'text-amber-500' :
+                            type.tenLoai === 'SWEETBOX' ? 'text-pink-500' :
+                            'text-gray-300'
+                          }`}>
+                            {type.tenLoai === 'SWEETBOX' ? 'Ghế đôi' : type.tenLoai === 'VIP' ? 'Ghế VIP' : type.tenLoai === 'THUONG' ? 'Ghế thường' : type.tenLoai}
+                          </span>
+                          {type.phuPhi > 0 && (
+                            <span className="text-[10px] text-white bg-[#E50914]/80 px-1.5 py-0.5 rounded-full font-bold">
+                              +{type.phuPhi.toLocaleString('vi-VN')}đ
+                            </span>
+                          )}
+                        </div>
+                        <span className={`text-[10px] px-2 py-1 rounded font-bold transition-colors ${
+                          type.tenLoai === 'VIP'
+                            ? 'bg-amber-500/20 text-amber-500 group-hover:bg-amber-500/30'
+                            : type.tenLoai === 'SWEETBOX'
+                              ? 'bg-pink-500/20 text-pink-500 group-hover:bg-pink-500/30'
+                              : 'bg-white/10 text-gray-400 group-hover:text-white'
+                        }`}>
+                          ÁP DỤNG
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -205,28 +248,42 @@ const AdminSeatsPage = () => {
                   <span className="text-gray-500">Đang chọn:</span>
                   <span className="font-black text-[#E50914] text-sm">{selectedSeatIds.length} ghế</span>
                 </div>
+                {selectedSeatIds.length > 0 && (
+                  <div className="text-[10px] text-gray-400 mb-2">
+                    {selectedSeatIds.map(id => seats.find(s => s.id === id)?.tenGhe).join(', ')}
+                  </div>
+                )}
                 <p className="text-[10px] text-gray-500 italic leading-relaxed">
-                  * Chọn các ghế trên sơ đồ, sau đó nhấn "ÁP DỤNG" ở loại ghế hoặc trạng thái mong muốn.
+                  Chọn ghế trên sơ đồ, sau đó bấm vào loại ghế hoặc trạng thái muốn áp dụng.
                 </p>
               </div>
             </div>
 
             <div className="bg-[#1C1B1B] rounded-2xl border border-white/5 p-6 shadow-xl flex-1">
-              <h3 className="font-headline font-bold text-sm text-gray-500 uppercase mb-4 tracking-widest">Chú giải</h3>
+              <h3 className="font-headline font-bold text-sm text-gray-500 uppercase mb-4 tracking-widest">Chú giải & Phụ phí</h3>
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 rounded bg-white/5 border border-white/20"></div>
-                  <span className="text-xs text-gray-400">Ghế thường</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 rounded bg-white/5 border border-amber-500/50"></div>
-                  <span className="text-xs text-gray-400">Ghế VIP</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 rounded bg-white/5 border border-pink-500/50"></div>
-                  <span className="text-xs text-gray-400">Ghế đôi (Sweetbox)</span>
-                </div>
-                <div className="flex items-center gap-3">
+                {loaiGhes.map(type => (
+                  <div key={type.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center ${
+                        type.tenLoai === 'VIP' ? 'border-amber-500/50 bg-amber-500/10' :
+                        type.tenLoai === 'SWEETBOX' ? 'border-pink-500/50 bg-pink-500/10' :
+                        'border-white/20 bg-white/5'
+                      }`}>
+                        {type.tenLoai === 'VIP' && <span className="material-symbols-outlined text-[12px] text-amber-500">star</span>}
+                        {type.tenLoai === 'SWEETBOX' && <span className="material-symbols-outlined text-[12px] text-pink-500">favorite</span>}
+                      </div>
+                      <span className="text-xs text-gray-400">
+                        {type.tenLoai === 'SWEETBOX' ? 'Ghế đôi' : type.tenLoai === 'VIP' ? 'Ghế VIP' : type.tenLoai === 'THUONG' ? 'Ghế thường' : `Ghế ${type.tenLoai}`}
+                      </span>
+                    </div>
+
+                    <span className="text-[10px] font-bold text-[#E50914]">
+                      {type.phuPhi > 0 ? `+${type.phuPhi.toLocaleString('vi-VN')}đ` : 'Miễn phí'}
+                    </span>
+                  </div>
+                ))}
+                <div className="flex items-center gap-3 pt-2 border-t border-white/5">
                   <div className="w-5 h-5 rounded bg-neutral-800 border border-red-900/50 flex items-center justify-center">
                     <span className="material-symbols-outlined text-[12px] text-red-900">block</span>
                   </div>

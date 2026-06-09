@@ -3,6 +3,7 @@ import {
   getTrangThaiGhe,
   giuGhe,
   huyGiuGhe,
+  getHeldSeats,
   getGhesByPhong,
   updateGhes,
 } from "../controllers/ghe/gheController";
@@ -26,6 +27,9 @@ router.post("/giu", authenticateToken, giuGhe);
 
 // Hủy giữ ghế
 router.post("/huy-giu", authenticateToken, huyGiuGhe);
+
+// Kiểm tra ghế đang giữ
+router.get("/giu/:suatChieuId", authenticateToken, getHeldSeats);
 
 // Quản lý ghế (Admin)
 router.get("/phong/:phongId", authenticateToken, requireRole("ADMIN"), getGhesByPhong);

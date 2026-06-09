@@ -49,6 +49,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (data) => {
+    try {
+      const res = await api.put('/users/profile', data);
+      setUser(res.data.user);
+      return res.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Cập nhật thất bại" };
+    }
+  };
+
   const logout = async () => {
     try {
       await api.post('/auth/logout');
@@ -70,7 +80,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, registerUser, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, registerUser, updateProfile, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

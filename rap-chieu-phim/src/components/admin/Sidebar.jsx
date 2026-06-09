@@ -34,9 +34,9 @@ const Sidebar = () => {
           <span className="material-symbols-outlined" data-icon="meeting_room">meeting_room</span>
           <span className="font-body font-medium">Phòng chiếu</span>
         </Link>
-        <Link className={getLinkClass('/admin/seats')} to="/admin/seats">
-          <span className="material-symbols-outlined" data-icon="event_seat">event_seat</span>
-          <span className="font-body font-medium">Sơ đồ ghế</span>
+        <Link className={getLinkClass('/admin/seat-types')} to="/admin/seat-types">
+          <span className="material-symbols-outlined" data-icon="chair">chair</span>
+          <span className="font-body font-medium">Loại ghế</span>
         </Link>
         <Link className={getLinkClass('/admin/schedules')} to="/admin/schedules">
           <span className="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>

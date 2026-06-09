@@ -9,21 +9,9 @@ import {
 import { authenticateToken } from "../middlewares/authMiddleware";
 import { requireRole } from "../middlewares/roleMiddleware";
 import { validate } from "../middlewares/validateMiddleware";
-import Joi from "joi";
+import { createPhongSchema, updatePhongSchema } from "../validators/phongValidator";
 
 const router = Router();
-
-const createPhongSchema = Joi.object({
-  rapId: Joi.string().uuid().required(),
-  tenPhong: Joi.string().required(),
-  soHang: Joi.number().integer().min(1).max(26).optional(),
-  soCot: Joi.number().integer().min(1).optional(),
-});
-
-const updatePhongSchema = Joi.object({
-  tenPhong: Joi.string(),
-  trangThai: Joi.string().valid("HOAT_DONG", "BAO_TRI"),
-});
 
 /**
  * @swagger

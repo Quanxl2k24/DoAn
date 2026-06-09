@@ -12,12 +12,14 @@ import rapRoutes from './routes/rapRoutes';
 import phongRoutes from './routes/phongRoutes';
 import suatChieuRoutes from './routes/suatChieuRoutes';
 import gheRoutes from './routes/gheRoutes';
+import loaiGheRoutes from './routes/loaiGheRoutes';
 import datVeRoutes from './routes/datVeRoutes';
+import adminRoutes from './routes/adminRoutes';
 
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: true, // Cho phép tất cả các origin gửi request (quan trọng khi dùng ngrok)
   credentials: true,
 }));
 app.use(helmet());
@@ -36,6 +38,8 @@ app.use('/api/raps', rapRoutes);
 app.use('/api/phongs', phongRoutes);
 app.use('/api/suat-chieus', suatChieuRoutes);
 app.use('/api/ghes', gheRoutes);
+app.use('/api/loai-ghes', loaiGheRoutes);
 app.use('/api/dat-ve', datVeRoutes);
+app.use('/api/admin', adminRoutes);
 
 export default app;

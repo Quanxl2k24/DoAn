@@ -33,7 +33,7 @@ const RegisterPage = () => {
       toast.success("Đăng ký thành công!", { id: loadingToast });
       navigate('/login');
     } catch (error) {
-      toast.error(error.message || "Lỗi đăng ký", { id: loadingToast });
+      toast.error(error.response?.data?.message || error.message || "Lỗi đăng ký", { id: loadingToast });
     }
   };
 

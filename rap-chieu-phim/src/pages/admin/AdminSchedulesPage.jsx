@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Sidebar from '../../components/admin/Sidebar';
 import AdminHeader from '../../components/admin/AdminHeader';
+import { SkeletonTable } from '../../components/Skeleton';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 
@@ -232,7 +233,7 @@ const AdminSchedulesPage = () => {
           </form>
         )}
 
-        {loading ? <div className="text-center py-20 text-secondary">Đang tải...</div> : schedules.length === 0 ? (
+        {loading ? <div className="bg-surface-container-low rounded-2xl border border-white/5 overflow-hidden"><SkeletonTable rows={5} cols={7} /></div> : schedules.length === 0 ? (
           <div className="text-center py-20 text-secondary">Không có suất chiếu cho ngày này</div>
         ) : (
           <div className="bg-surface-container-low rounded-2xl border border-white/5 overflow-hidden">

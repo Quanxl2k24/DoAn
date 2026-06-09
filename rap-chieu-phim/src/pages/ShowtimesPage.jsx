@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import Skeleton from '../components/Skeleton';
 import api from '../utils/api';
 
 const ShowtimesPage = () => {
@@ -105,7 +106,19 @@ const ShowtimesPage = () => {
 
           {/* Showtimes */}
           {loading ? (
-            <div className="text-center text-secondary py-20">Đang tải lịch chiếu...</div>
+            <div className="space-y-6">
+              {[1,2,3].map((i) => (
+                <div key={i} className="bg-surface-container-low rounded-2xl border border-white/5 overflow-hidden p-6">
+                  <Skeleton className="h-6 w-48 mb-4" />
+                  <Skeleton className="h-4 w-64 mb-6" />
+                  <div className="flex gap-3">
+                    {[1,2,3,4].map((j) => (
+                      <Skeleton key={j} variant="rectangular" className="h-16 w-20 rounded-md" />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : Object.keys(groupedByCinema).length === 0 ? (
             <div className="text-center text-secondary py-20">Không có suất chiếu cho ngày này</div>
           ) : (

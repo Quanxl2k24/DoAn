@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import Skeleton from '../components/Skeleton';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -15,6 +16,9 @@ const SeatSelectionPage = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [heldSeats, setHeldSeats] = useState(null);
+  const [holdUntil, setHoldUntil] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
 
   useEffect(() => {
     if (!suatChieuId) return;
@@ -30,6 +34,43 @@ const SeatSelectionPage = () => {
     };
     fetchSeats();
   }, [suatChieuId]);
+
+  // Check held seats on mount (when coming back from payment)
+  useEffect(() => {
+    if (!suatChieuId || !user) return;
+    const checkHeldSeats = async () => {
+      try {
+        const res = await api.get(`/ghes/giu/${suatChieuId}`);
+        if (res.data.data) {
+          const { gheIds, hetHanLuc } = res.data.data;
+          setHeldSeats(gheIds);
+          setSelectedSeats(gheIds);
+          setHoldUntil(new Date(hetHanLuc).getTime());
+        }
+      } catch {
+        // No held seats
+      }
+    };
+    checkHeldSeats();
+  }, [suatChieuId, user]);
+
+  // Countdown timer for held seats
+  useEffect(() => {
+    if (!holdUntil) return;
+    const tick = () => {
+      const now = Date.now();
+      const diff = Math.max(0, Math.floor((holdUntil - now) / 1000));
+      setTimeLeft(diff);
+      if (diff <= 0) {
+        setHoldUntil(null);
+        setHeldSeats(null);
+        setTimeLeft(0);
+      }
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [holdUntil]);
 
   const toggleSeat = (seatId, status) => {
     if (status !== 'TRONG') return;
@@ -50,28 +91,61 @@ const SeatSelectionPage = () => {
       return;
     }
 
+    // If seats are already held, go straight to payment
+    if (heldSeats) {
+      navigateToPayment(selectedSeats, holdUntil);
+      return;
+    }
+
     setSubmitting(true);
     try {
       // Lock seats
-      await api.post('/ghes/giu', {
+      const res = await api.post('/ghes/giu', {
         suatChieuId,
         gheIds: selectedSeats,
       });
 
-      const selectedGhes = seatData?.ghes?.filter((g) => selectedSeats.includes(g.id)) || [];
-      const total = selectedGhes.reduce(
-        (sum, g) => sum + (seatData?.suatChieu ? 120000 : 0) + (g.phuPhi || 0),
-        0
-      );
+      const holdUntilTime = res.data.hetHanLuc;
 
-      navigate(
-        `/payment?suatChieuId=${suatChieuId}&gheIds=${selectedSeats.join(',')}&total=${total}`
-      );
+      navigateToPayment(selectedSeats, new Date(holdUntilTime).getTime());
     } catch (error) {
       toast.error(error.response?.data?.message || 'Lỗi giữ ghế');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const navigateToPayment = (gheIds, holdUntilTime) => {
+    const basePrice = seatData?.suatChieu?.giaSuatChieu || seatData?.phim?.giaCoBan || 120000;
+    const selectedGhes = seatData?.ghes?.filter((g) => gheIds.includes(g.id)) || [];
+    const total = selectedGhes.reduce(
+      (sum, g) => sum + basePrice + (g.phuPhi || 0),
+      0
+    );
+    navigate(
+      `/payment?suatChieuId=${suatChieuId}&gheIds=${gheIds.join(',')}&total=${total}&holdUntil=${holdUntilTime}`
+    );
+  };
+
+  const handleCancelSeats = async () => {
+    try {
+      await api.post('/ghes/huy-giu', { suatChieuId });
+      setHeldSeats(null);
+      setHoldUntil(null);
+      setSelectedSeats([]);
+      // Refresh seat data to update status from DANG_GIU → TRONG
+      const res = await api.get(`/ghes/trang-thai/${suatChieuId}`);
+      setSeatData(res.data.data);
+      toast.success('Đã hủy giữ ghế');
+    } catch (err) {
+      toast.error('Lỗi hủy giữ ghế');
+    }
+  };
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   // Group seats by row
@@ -83,8 +157,15 @@ const SeatSelectionPage = () => {
 
   if (loading) {
     return (
-      <div className="bg-surface min-h-screen flex items-center justify-center">
-        <div className="text-on-surface text-xl">Đang tải sơ đồ ghế...</div>
+      <div className="bg-surface min-h-screen flex flex-col">
+        <Header />
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6">
+          <Skeleton variant="rectangular" className="w-full max-w-[600px] h-12 rounded-lg" />
+          <Skeleton variant="rectangular" className="w-full max-w-[600px] h-[400px] rounded-2xl" />
+          <div className="flex gap-4">
+            {[1,2,3,4,5].map(i => <Skeleton key={i} variant="circular" className="w-8 h-8" />)}
+          </div>
+        </div>
       </div>
     );
   }
@@ -110,13 +191,58 @@ const SeatSelectionPage = () => {
               {seatData.phong?.tenPhong || ''} • {new Date(seatData.suatChieu?.thoiGianBatDau).toLocaleString('vi-VN')}
             </p>
           </div>
-          <div className="flex items-center gap-4 text-xs font-bold font-body">
-            <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-white/10 border border-white/5"></div> Thường</div>
-            <div className="flex items-center gap-2"><div className="w-4 h-4 rounded border border-[#E50914] bg-[#E50914]/20 flex items-center justify-center"><span className="material-symbols-outlined text-[10px] text-[#E50914]">star</span></div> VIP</div>
+          <div className="flex items-center gap-4 text-xs font-bold font-body flex-wrap">
+            {[...new Set(seatData.ghes.map(g => g.loaiGhe))].map(loai => {
+              const ghe = seatData.ghes.find(g => g.loaiGhe === loai);
+              const phuPhi = ghe?.phuPhi || 0;
+              const isVip = loai === 'VIP';
+              const isSweetbox = loai === 'SWEETBOX';
+              return (
+                <div key={loai} className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded ${isVip ? 'border border-[#E50914] bg-[#E50914]/20 flex items-center justify-center' : isSweetbox ? 'border border-pink-500 bg-pink-500/20 flex items-center justify-center' : 'bg-white/10 border border-white/5'}`}>
+                    {(isVip || isSweetbox) && <span className={`material-symbols-outlined text-[10px] ${isVip ? 'text-[#E50914]' : 'text-pink-500'}`}>{isVip ? 'star' : 'favorite'}</span>}
+                  </div>
+                  <span>{loai === 'SWEETBOX' ? 'Đôi' : loai.charAt(0) + loai.slice(1).toLowerCase()}</span>
+                  {phuPhi > 0 && <span className="text-[#E50914]">+{phuPhi.toLocaleString('vi-VN')}đ</span>}
+                </div>
+              );
+            })}
             <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-[#E50914] shadow-[0_0_8px_#E50914]"></div> Đang chọn</div>
             <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-surface-container-lowest opacity-40"></div> Đã bán</div>
           </div>
         </div>
+
+        {/* Held Seats Banner */}
+        {heldSeats && holdUntil && timeLeft > 0 && (
+          <div className="mx-6 mt-4 bg-surface-container-low rounded-2xl border border-[#E50914]/30 p-5 flex flex-col md:flex-row items-center gap-4">
+            <div className="flex items-center gap-3 flex-1">
+              <span className="material-symbols-outlined text-[#E50914] text-3xl">timer</span>
+              <div>
+                <p className="font-bold text-on-surface text-sm">Bạn đang giữ ghế</p>
+                <p className="text-secondary text-xs">
+                  {heldSeats.map((id) => seatData?.ghes?.find((g) => g.id === id)?.tenGhe).join(', ')}
+                </p>
+              </div>
+            </div>
+            <div className={`text-2xl font-black font-mono ${timeLeft < 60 ? 'text-[#E50914] animate-pulse' : 'text-on-surface'}`}>
+              {formatTime(timeLeft)}
+            </div>
+            <div className="flex gap-3 w-full md:w-auto">
+              <button
+                onClick={() => navigateToPayment(selectedSeats, holdUntil)}
+                className="flex-1 md:flex-none bg-[#E50914] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-red-700 transition-colors"
+              >
+                Tiếp tục thanh toán
+              </button>
+              <button
+                onClick={handleCancelSeats}
+                className="flex-1 md:flex-none bg-white/10 text-on-surface px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-white/20 transition-colors border border-white/10"
+              >
+                Bỏ ghế đã chọn
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Screen */}
         <div className="mt-12 mb-16 px-6 max-w-[800px] mx-auto w-full">
@@ -138,17 +264,20 @@ const SeatSelectionPage = () => {
                   <div className="flex gap-2">
                     {ghes.map((ghe) => {
                       const isOccupied = ghe.trangThai === 'DA_BAN';
-                      const isBeingHeld = ghe.trangThai === 'DANG_GIU';
+                      const isHeldByMe = heldSeats?.includes(ghe.id);
+                      const isBeingHeld = ghe.trangThai === 'DANG_GIU' && !isHeldByMe;
                       const isSelected = selectedSeats.includes(ghe.id);
                       const isVip = ghe.loaiGhe === 'VIP';
                       const isDisabled = isOccupied || isBeingHeld;
+
+                      const isSweetbox = ghe.loaiGhe === 'SWEETBOX';
 
                       return (
                         <button
                           key={ghe.id}
                           onClick={() => toggleSeat(ghe.id, ghe.trangThai)}
                           disabled={isDisabled}
-                          className={`w-8 h-8 rounded-sm text-[10px] font-bold transition-all flex items-center justify-center ${
+                          className={`w-8 h-8 rounded-sm text-[10px] font-bold transition-all flex items-center justify-center relative group ${
                             isOccupied
                               ? 'bg-surface-container-lowest opacity-40 cursor-not-allowed'
                               : isBeingHeld
@@ -157,11 +286,17 @@ const SeatSelectionPage = () => {
                                   ? 'bg-[#E50914] text-white shadow-[0_0_10px_rgba(229,9,20,0.6)] border border-[#E50914]'
                                   : isVip
                                     ? 'bg-[#E50914]/10 border border-[#E50914]/50 hover:bg-[#E50914]/30 text-[#E50914]'
-                                    : 'bg-white/10 border border-white/5 hover:bg-white/20 text-transparent hover:text-white/50'
+                                    : isSweetbox
+                                      ? 'bg-pink-500/10 border border-pink-500/50 hover:bg-pink-500/30 text-pink-500'
+                                      : 'bg-white/10 border border-white/5 hover:bg-white/20 text-transparent hover:text-white/50'
                           }`}
-                          title={`${ghe.tenGhe} - ${ghe.loaiGhe}`}
+                          title={`${ghe.tenGhe} - ${ghe.loaiGhe}${ghe.phuPhi > 0 ? ` (+${ghe.phuPhi.toLocaleString('vi-VN')}đ)` : ''}`}
                         >
-                          {isSelected ? ghe.tenGhe : (isVip && !isDisabled ? <span className="material-symbols-outlined text-[14px]">star</span> : '')}
+                          {isSelected ? ghe.tenGhe : (
+                            isVip && !isDisabled ? <span className="material-symbols-outlined text-[14px]">star</span> :
+                            isSweetbox && !isDisabled ? <span className="material-symbols-outlined text-[14px]">favorite</span> :
+                            ''
+                          )}
                         </button>
                       );
                     })}
@@ -184,17 +319,39 @@ const SeatSelectionPage = () => {
                 ? selectedSeats.map((id) => seatData.ghes.find((g) => g.id === id)?.tenGhe).join(', ')
                 : 'Chưa chọn ghế'}
             </span>
+            {selectedSeats.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-1">
+                {[...new Set(selectedSeats.map((id) => {
+                  const g = seatData.ghes.find((g) => g.id === id);
+                  return g?.loaiGhe;
+                }))].map(loai => {
+                  const count = selectedSeats.filter((id) => {
+                    const g = seatData.ghes.find((g) => g.id === id);
+                    return g?.loaiGhe === loai;
+                  }).length;
+                  const ghe = seatData.ghes.find((g) => g.loaiGhe === loai);
+                  const phuPhi = ghe?.phuPhi || 0;
+                  return (
+                    <span key={loai} className="text-[10px] text-secondary bg-white/5 px-2 py-0.5 rounded-full">
+                      {count} {loai === 'SWEETBOX' ? 'đôi' : loai.toLowerCase()}
+                      {phuPhi > 0 && <span className="text-[#E50914]"> (+{phuPhi.toLocaleString('vi-VN')}đ)</span>}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-6 w-full md:w-auto">
             <div className="flex flex-col text-right">
               <span className="text-secondary text-sm">Tạm tính</span>
               <span className="font-black text-2xl text-[#E50914]">
-                {selectedSeats
+                {(selectedSeats
                   .reduce((sum, id) => {
+                    const basePrice = seatData?.suatChieu?.giaSuatChieu || seatData?.phim?.giaCoBan || 120000;
                     const ghe = seatData.ghes.find((g) => g.id === id);
-                    return sum + 120000 + (ghe?.phuPhi || 0);
+                    return sum + basePrice + (ghe?.phuPhi || 0);
                   }, 0)
-                  .toLocaleString('vi-VN')}{' '}
+                ).toLocaleString('vi-VN')}{' '}
                 đ
               </span>
             </div>
@@ -207,7 +364,7 @@ const SeatSelectionPage = () => {
                   : 'bg-surface-container-low text-secondary cursor-not-allowed'
               }`}
             >
-              {submitting ? 'Đang xử lý...' : 'TIẾP TỤC'}
+              {submitting ? 'Đang xử lý...' : heldSeats ? 'TIẾP TỤC THANH TOÁN' : 'TIẾP TỤC'}
             </button>
           </div>
         </div>

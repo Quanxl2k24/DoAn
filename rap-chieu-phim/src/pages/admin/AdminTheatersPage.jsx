@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/admin/Sidebar';
 import AdminHeader from '../../components/admin/AdminHeader';
+import { SkeletonTable } from '../../components/Skeleton';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 
@@ -96,7 +97,9 @@ const AdminTheatersPage = () => {
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-secondary">Đang tải...</div>
+          <div className="bg-surface-container-low rounded-2xl border border-white/5 overflow-hidden">
+            <SkeletonTable rows={5} cols={4} />
+          </div>
         ) : (
           <div className="bg-surface-container-low rounded-2xl border border-white/5 overflow-hidden">
             <div className="overflow-x-auto">

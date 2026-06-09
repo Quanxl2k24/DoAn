@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getAllPhim,
+  searchPhim,
   getPhimById,
   createPhim,
   updatePhim,
@@ -45,6 +46,27 @@ const router = Router();
  *         description: Danh sách phim
  */
 router.get("/", getAllPhim);
+
+/**
+ * @swagger
+ * /api/phims/search:
+ *   get:
+ *     summary: Tìm kiếm phim
+ *     tags: [Phims]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Danh sách phim tìm thấy
+ */
+router.get("/search", searchPhim);
 
 /**
  * @swagger

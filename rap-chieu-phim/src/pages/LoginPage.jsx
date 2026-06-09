@@ -17,7 +17,7 @@ const LoginPage = () => {
       toast.success("Đăng nhập thành công!", { id: loadingToast });
       
       // Kiểm tra role để redirect
-      if (res.user?.role?.name === 'ADMIN' || res.user?.roleId === 1) {
+      if (res.user?.role?.name === 'ADMIN') {
         navigate('/admin', { replace: true });
       } else {
         navigate('/', { replace: true });

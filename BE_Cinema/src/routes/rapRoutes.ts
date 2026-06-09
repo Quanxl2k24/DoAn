@@ -9,20 +9,9 @@ import {
 import { authenticateToken } from "../middlewares/authMiddleware";
 import { requireRole } from "../middlewares/roleMiddleware";
 import { validate } from "../middlewares/validateMiddleware";
-import Joi from "joi";
+import { createRapSchema, updateRapSchema } from "../validators/rapValidator";
 
 const router = Router();
-
-const createRapSchema = Joi.object({
-  tenRap: Joi.string().required(),
-  diaChi: Joi.string().required(),
-});
-
-const updateRapSchema = Joi.object({
-  tenRap: Joi.string(),
-  diaChi: Joi.string(),
-  trangThai: Joi.string().valid("HOAT_DONG", "NGUNG_HOAT_DONG"),
-});
 
 /**
  * @swagger

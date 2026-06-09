@@ -68,24 +68,14 @@ const HeroBanner = () => {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-4">
-          {featuredMovie ? (
-            <Link
-              to={`/showtimes?phimId=${featuredMovie.id}`}
-              className="bg-primary-container text-on-primary-container px-8 py-4 rounded-md font-bold text-lg flex items-center gap-3 hover:scale-105 transition-all duration-300"
-            >
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>confirmation_number</span>
-              ĐẶT VÉ NGAY
-            </Link>
-          ) : (
-            <Link
-              to="/showtimes"
-              className="bg-primary-container text-on-primary-container px-8 py-4 rounded-md font-bold text-lg flex items-center gap-3 hover:scale-105 transition-all duration-300"
-            >
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>confirmation_number</span>
-              ĐẶT VÉ NGAY
-            </Link>
-          )}
-          {featuredMovie?.trailerUrl ? (
+          <Link
+            to={featuredMovie ? `/showtimes?phimId=${featuredMovie.id}` : '/showtimes'}
+            className="bg-primary-container text-on-primary-container px-8 py-4 rounded-md font-bold text-lg flex items-center gap-3 hover:scale-105 transition-all duration-300"
+          >
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>confirmation_number</span>
+            ĐẶT VÉ NGAY
+          </Link>
+          {featuredMovie?.trailerUrl && (
             <a
               href={featuredMovie.trailerUrl}
               target="_blank"
@@ -95,11 +85,6 @@ const HeroBanner = () => {
               <span className="material-symbols-outlined">play_circle</span>
               XEM TRAILER
             </a>
-          ) : (
-            <button className="bg-surface-container-highest/40 backdrop-blur-md text-white border border-white/10 px-8 py-4 rounded-md font-bold text-lg flex items-center gap-3 hover:bg-white/10 transition-all">
-              <span className="material-symbols-outlined">play_circle</span>
-              XEM TRAILER
-            </button>
           )}
         </div>
       </div>

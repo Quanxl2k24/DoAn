@@ -5,6 +5,7 @@ import MovieSection from '../components/MovieSection';
 import PromoSection from '../components/PromoSection';
 import BottomNav from '../components/BottomNav';
 import Footer from '../components/Footer';
+import { SkeletonCard } from '../components/Skeleton';
 import api from '../utils/api';
 
 const HomePage = () => {
@@ -50,8 +51,15 @@ const HomePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="text-on-surface text-xl">Đang tải...</div>
+      <div className="min-h-screen bg-surface">
+        <Header />
+        <div className="pt-28 pb-24 max-w-[1200px] mx-auto px-6">
+          <div className="mb-6">
+            <SkeletonCard count={4} />
+          </div>
+          <SkeletonCard count={4} />
+        </div>
+        <BottomNav />
       </div>
     );
   }

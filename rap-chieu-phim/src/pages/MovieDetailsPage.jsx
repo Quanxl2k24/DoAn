@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import Skeleton from '../components/Skeleton';
 import api from '../utils/api';
 
 const MovieDetailsPage = () => {
@@ -25,8 +26,22 @@ const MovieDetailsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="text-on-surface text-xl">Đang tải...</div>
+      <div className="min-h-screen bg-surface">
+        <Header />
+        <div className="pt-28 max-w-[1200px] mx-auto px-6">
+          <div className="flex flex-col md:flex-row gap-8">
+            <Skeleton variant="rectangular" className="w-full md:w-64 aspect-[2/3] rounded-2xl" />
+            <div className="flex-1 space-y-4">
+              <Skeleton className="h-10 w-3/4" />
+              <Skeleton className="h-5 w-1/2" />
+              <Skeleton className="h-5 w-1/3" />
+              <div className="flex gap-4 mt-8">
+                <Skeleton variant="rectangular" className="h-14 w-40 rounded-md" />
+                <Skeleton variant="rectangular" className="h-14 w-40 rounded-md" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

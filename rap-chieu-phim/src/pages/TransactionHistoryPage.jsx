@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import BottomNav from '../components/BottomNav';
 import Footer from '../components/Footer';
+import { SkeletonList } from '../components/Skeleton';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -43,7 +45,7 @@ const TransactionHistoryPage = () => {
           </div>
 
           {loading ? (
-            <div className="text-center text-secondary py-20">Đang tải...</div>
+            <SkeletonList rows={4} />
           ) : transactions.length === 0 ? (
             <div className="text-center text-secondary py-20">Chưa có giao dịch nào</div>
           ) : (
@@ -53,31 +55,34 @@ const TransactionHistoryPage = () => {
                 const phim = veDauTien?.suatChieu?.phim;
                 const rap = veDauTien?.suatChieu?.phong?.rap;
                 const ghes = txn.ves?.map((v) => v.ghe?.tenGhe).join(', ');
-                const thoiGian = new Date(txn.thoiGian);
+                const thoiGianChieu = new Date(veDauTien?.suatChieu?.thoiGianBatDau || txn.thoiGian);
 
                 return (
-                  <div
-                    key={txn.id}
-                    className="bg-surface-container-low border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:bg-surface-container-high transition-colors"
-                  >
-                    <div className="flex gap-6 items-start">
-                      <div className="w-16 h-16 rounded-xl bg-surface-container-highest flex flex-col items-center justify-center text-on-surface border border-white/10 shrink-0">
-                        <span className="text-xs font-bold text-secondary uppercase">
-                          {thoiGian.toLocaleDateString('vi-VN', { month: '2-digit' })}
-                        </span>
-                        <span className="text-xl font-black">
-                          {thoiGian.toLocaleDateString('vi-VN', { day: '2-digit' })}
-                        </span>
-                      </div>
-                      <div>
-                        <h3 className="font-headline text-xl font-bold mb-1">{phim?.tenPhim || 'Phim'}</h3>
-                        <p className="text-sm text-secondary mb-3">
-                          {rap?.tenRap || 'Rạp'} • {thoiGian.toLocaleDateString('vi-VN')} •{' '}
-                          {thoiGian.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                        </p>
+                   <div
+                      key={txn.id}
+                      className="bg-surface-container-low border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:bg-surface-container-high transition-colors"
+                    >
+                      <div className="flex gap-6 items-start">
+                        <div className="w-16 h-16 rounded-xl bg-surface-container-highest flex flex-col items-center justify-center text-on-surface border border-white/10 shrink-0">
+                          <span className="text-xs font-bold text-secondary uppercase">
+                            {thoiGianChieu.toLocaleDateString('vi-VN', { month: '2-digit' })}
+                          </span>
+                          <span className="text-xl font-black">
+                            {thoiGianChieu.toLocaleDateString('vi-VN', { day: '2-digit' })}
+                          </span>
+                        </div>
+                        <div>
+                          <h3 className="font-headline text-xl font-bold mb-1">{phim?.tenPhim || 'Phim'}</h3>
+                          <p className="text-sm text-secondary mb-3">
+                            {rap?.tenRap || 'Rạp'} • {thoiGianChieu.toLocaleDateString('vi-VN')} •{' '}
+                            {thoiGianChieu.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
                         <div className="flex flex-wrap gap-2 text-xs font-bold">
                           <span className="bg-surface-container-highest px-3 py-1 rounded-md text-on-surface">
                             Ghế: {ghes}
+                          </span>
+                          <span className="bg-surface-container-highest px-3 py-1 rounded-md text-on-surface text-[10px]">
+                            {txn.ves?.map(v => `${v.ghe?.tenGhe}${v.ghe?.loaiGhe?.phuPhi > 0 ? ` (+${v.ghe?.loaiGhe?.phuPhi?.toLocaleString('vi-VN')}đ)` : ''}`).join(', ')}
                           </span>
                           <span className="bg-surface-container-highest px-3 py-1 rounded-md text-on-surface">
                             Mã GD: {txn.id.slice(0, 8)}
@@ -108,6 +113,7 @@ const TransactionHistoryPage = () => {
           )}
         </div>
       </main>
+      <BottomNav />
       <Footer />
     </>
   );

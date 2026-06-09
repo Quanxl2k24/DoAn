@@ -21,8 +21,7 @@ export const HomeGuard = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  // Tự động redirect về admin nếu là Admin truy cập trang chủ
-  if ((user?.role?.name === 'ADMIN' || user?.roleId === 1) && location.pathname === '/') {
+  if ((user?.role?.name === 'ADMIN') && location.pathname === '/') {
     return <Navigate to="/admin" replace />;
   }
 

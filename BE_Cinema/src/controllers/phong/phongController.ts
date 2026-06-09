@@ -51,31 +51,33 @@ export const createPhong = async (
 
     // 2. Tự động tạo ghế nếu có soHang và soCot
     if (soHang && soCot) {
-      const loaiGheThuong = await prisma.loaiGhe.findFirst({
+      let loaiGheThuong = await prisma.loaiGhe.findFirst({
         where: { tenLoai: "THUONG" }
       });
 
-      if (loaiGheThuong) {
-        const seatsData = [];
-        for (let i = 0; i < soHang; i++) {
-          const rowChar = String.fromCharCode(65 + i); // 0 -> A, 1 -> B...
-          for (let j = 1; j <= soCot; j++) {
-            seatsData.push({
-              phongId: phong.id,
-              loaiGheId: loaiGheThuong.id,
-              hang: rowChar,
-              cot: j,
-              tenGhe: `${rowChar}${j}`,
-              trangThai: "HOAT_DONG"
-            });
-          }
-        }
-        
-        // Sử dụng createMany để tối ưu hiệu năng
-        await prisma.ghe.createMany({
-          data: seatsData
+      // Tự tạo loại ghế mặc định nếu chưa có
+      if (!loaiGheThuong) {
+        loaiGheThuong = await prisma.loaiGhe.create({
+          data: { tenLoai: "THUONG", phuPhi: 0 }
         });
       }
+
+      const seatsData = [];
+      for (let i = 0; i < soHang; i++) {
+        const rowChar = String.fromCharCode(65 + i);
+        for (let j = 1; j <= soCot; j++) {
+          seatsData.push({
+            phongId: phong.id,
+            loaiGheId: loaiGheThuong.id,
+            hang: rowChar,
+            cot: j,
+            tenGhe: `${rowChar}${j}`,
+            trangThai: "HOAT_DONG"
+          });
+        }
+      }
+
+      await prisma.ghe.createMany({ data: seatsData });
     }
 
     res.status(201).json({ message: "Tạo phòng và sơ đồ ghế thành công", data: phong });

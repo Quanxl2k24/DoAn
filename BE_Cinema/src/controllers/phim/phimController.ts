@@ -39,6 +39,39 @@ export const getAllPhim = async (
   }
 };
 
+export const searchPhim = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const q = (req.query.q as string || "").trim();
+    const limit = Math.min(Number(req.query.limit as string) || 10, 20);
+
+    if (!q) {
+      res.status(200).json({ data: [] });
+      return;
+    }
+
+    const phims = await prisma.phim.findMany({
+      where: {
+        OR: [
+          { tenPhim: { contains: q, mode: "insensitive" } },
+          { theLoai: { contains: q, mode: "insensitive" } },
+          { daoDien: { contains: q, mode: "insensitive" } },
+          { dienVien: { contains: q, mode: "insensitive" } },
+        ],
+      },
+      take: limit,
+      orderBy: { ngayKhoiChieu: "desc" },
+    });
+
+    res.status(200).json({ data: phims });
+  } catch (error) {
+    console.error("Search Phim Error:", error);
+    res.status(500).json({ message: "Lỗi máy chủ nội bộ" });
+  }
+};
+
 export const getPhimById = async (
   req: Request,
   res: Response

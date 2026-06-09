@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/admin/Sidebar';
 import AdminHeader from '../../components/admin/AdminHeader';
-import AdminFooter from '../../components/admin/AdminFooter';
+import { SkeletonCard } from '../../components/Skeleton';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 
@@ -145,7 +145,7 @@ const AdminMoviesPage = () => {
           </form>
         )}
 
-        {loading ? <div className="text-center py-20 text-secondary">Đang tải...</div> : (
+        {loading ? <SkeletonCard count={4} /> : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {movies.map((movie) => (
               <div key={movie.id} className="bg-surface-container-low rounded-2xl border border-white/5 overflow-hidden group">

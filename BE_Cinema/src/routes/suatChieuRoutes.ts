@@ -7,16 +7,9 @@ import {
 import { authenticateToken } from "../middlewares/authMiddleware";
 import { requireRole } from "../middlewares/roleMiddleware";
 import { validate } from "../middlewares/validateMiddleware";
-import Joi from "joi";
+import { createSuatChieuSchema } from "../validators/suatChieuValidator";
 
 const router = Router();
-
-const createSuatChieuSchema = Joi.object({
-  phimId: Joi.string().uuid().required(),
-  phongId: Joi.string().uuid().required(),
-  thoiGianBatDau: Joi.date().iso().required(),
-  giaSuatChieu: Joi.number().optional(),
-});
 
 /**
  * @swagger

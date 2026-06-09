@@ -11,6 +11,7 @@ export const getTrangThaiGhe = async (
     const suatChieu = await prisma.suatChieu.findUnique({
       where: { id: suatChieuId },
       include: {
+        phim: true,
         phong: {
           include: {
             ghes: {
@@ -70,6 +71,12 @@ export const getTrangThaiGhe = async (
           id: suatChieu.id,
           thoiGianBatDau: suatChieu.thoiGianBatDau,
           thoiGianKetThuc: suatChieu.thoiGianKetThuc,
+          giaSuatChieu: suatChieu.giaSuatChieu || suatChieu.phim.giaCoBan,
+        },
+        phim: {
+          id: suatChieu.phim.id,
+          tenPhim: suatChieu.phim.tenPhim,
+          giaCoBan: suatChieu.phim.giaCoBan,
         },
         phong: {
           id: suatChieu.phong.id,
@@ -141,7 +148,7 @@ export const giuGhe = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Create new locks
-    const thoiGianHetHan = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    const thoiGianHetHan = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     const giuGhes = await Promise.all(
       gheIds.map((gheId: string) =>
         prisma.giuGhe.create({
@@ -187,6 +194,46 @@ export const huyGiuGhe = async (
     res.status(200).json({ message: "Hủy giữ ghế thành công" });
   } catch (error) {
     console.error("Huy Giu Ghe Error:", error);
+    res.status(500).json({ message: "Lỗi máy chủ nội bộ" });
+  }
+};
+
+export const getHeldSeats = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    const suatChieuId = req.params.suatChieuId as string;
+
+    const held = await prisma.giuGhe.findMany({
+      where: {
+        suatChieuId,
+        userId,
+        trangThai: "DANG_GIU",
+        thoiGianHetHan: { gte: new Date() },
+      },
+      select: { gheId: true, thoiGianHetHan: true },
+    });
+
+    if (held.length === 0) {
+      res.status(200).json({ data: null, message: "Không có ghế nào đang giữ" });
+      return;
+    }
+
+    res.status(200).json({
+      data: {
+        gheIds: held.map((h) => h.gheId),
+        hetHanLuc: held[0]!.thoiGianHetHan,
+      },
+    });
+  } catch (error) {
+    console.error("Get Held Seats Error:", error);
     res.status(500).json({ message: "Lỗi máy chủ nội bộ" });
   }
 };

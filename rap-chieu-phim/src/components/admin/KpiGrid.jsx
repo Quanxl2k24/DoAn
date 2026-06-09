@@ -1,43 +1,69 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../../utils/api';
 
-const KpiGrid = () => {
+const KpiGrid = ({ days = 7 }) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await api.get(`/admin/analytics?days=${days}`);
+        setData(res.data.data);
+      } catch (err) {
+        console.error('Lỗi tải KPI:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [days]);
+
+  const formatCurrency = (value) => {
+    if (!value) return '0';
+    if (value >= 1000000000) return `${(value / 1000000000).toFixed(1)}B`;
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}Tr`;
+    if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+    return value.toLocaleString('vi-VN');
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
-      {/* Total Revenue */}
       <div className="bg-surface-container-low p-8 rounded-xl border border-white/5">
         <div className="flex justify-between items-start mb-6">
-          <span className="material-symbols-outlined text-tertiary" data-icon="payments">payments</span>
-          <span className="text-tertiary text-xs font-bold font-body">+12.5%</span>
+          <span className="material-symbols-outlined text-tertiary">payments</span>
         </div>
         <p className="text-on-surface-variant text-xs uppercase tracking-widest mb-1">TỔNG DOANH THU</p>
-        <h3 className="text-4xl font-headline font-black">142.85Tr</h3>
+        <h3 className="text-4xl font-headline font-black">
+          {loading ? '...' : `${formatCurrency(data?.totalRevenue)}`}
+        </h3>
       </div>
-      {/* Total Bookings */}
       <div className="bg-surface-container-low p-8 rounded-xl border border-white/5">
         <div className="flex justify-between items-start mb-6">
-          <span className="material-symbols-outlined text-primary" data-icon="confirmation_number">confirmation_number</span>
-          <span className="text-primary text-xs font-bold font-body">+8.2%</span>
+          <span className="material-symbols-outlined text-primary">confirmation_number</span>
         </div>
         <p className="text-on-surface-variant text-xs uppercase tracking-widest mb-1">TỔNG SỐ VÉ</p>
-        <h3 className="text-4xl font-headline font-black">12,402</h3>
+        <h3 className="text-4xl font-headline font-black">
+          {loading ? '...' : (data?.totalTickets ?? 0).toLocaleString('vi-VN')}
+        </h3>
       </div>
-      {/* Active Movies */}
       <div className="bg-surface-container-low p-8 rounded-xl border border-white/5">
         <div className="flex justify-between items-start mb-6">
-          <span className="material-symbols-outlined text-secondary" data-icon="movie">movie</span>
-          <span className="text-secondary text-xs font-bold font-body">Ổn định</span>
+          <span className="material-symbols-outlined text-secondary">movie</span>
         </div>
         <p className="text-on-surface-variant text-xs uppercase tracking-widest mb-1">PHIM ĐANG CHIẾU</p>
-        <h3 className="text-4xl font-headline font-black">24</h3>
+        <h3 className="text-4xl font-headline font-black">
+          {loading ? '...' : (data?.totalMovies ?? 0)}
+        </h3>
       </div>
-      {/* Occupancy Rate */}
       <div className="bg-surface-container-low p-8 rounded-xl border border-white/5">
         <div className="flex justify-between items-start mb-6">
-          <span className="material-symbols-outlined text-error" data-icon="chair">chair</span>
-          <span className="text-error text-xs font-bold font-body">-2.1%</span>
+          <span className="material-symbols-outlined text-error">chair</span>
         </div>
         <p className="text-on-surface-variant text-xs uppercase tracking-widest mb-1">TỶ LỆ LẤP ĐẦY</p>
-        <h3 className="text-4xl font-headline font-black">76.4%</h3>
+        <h3 className="text-4xl font-headline font-black">
+          {loading ? '...' : `${data?.occupancyRate ?? 0}%`}
+        </h3>
       </div>
     </div>
   );

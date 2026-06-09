@@ -1,17 +1,63 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../utils/api';
 
 const Header = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const navLinks = [
-    { to: '/', label: 'Phim' },
-    { to: '/showtimes', label: 'Lịch Chiếu' },
-    { to: '/showtimes', label: 'Rạp' },
-    { to: '/history', label: 'Vé Của Tôi' },
-  ];
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef(null);
+  const debounceRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const fetchSuggestions = useCallback(async (q) => {
+    if (!q.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    try {
+      const res = await api.get(`/phims/search?q=${encodeURIComponent(q)}&limit=5`);
+      setSuggestions(res.data.data || []);
+    } catch {
+      setSuggestions([]);
+    }
+  }, []);
+
+  const handleSearchInput = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    setShowSuggestions(true);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchSuggestions(val), 300);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (!q) return;
+    setShowSuggestions(false);
+    navigate(`/search?q=${encodeURIComponent(q)}`);
+  };
+
+  const handleSuggestionClick = (movieId) => {
+    setShowSuggestions(false);
+    setSearchQuery('');
+    navigate(`/movie/${movieId}`);
+  };
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-[#131313] dark:bg-neutral-950/80 backdrop-blur-xl shadow-2xl shadow-black/50">
@@ -52,9 +98,41 @@ const Header = () => {
           </nav>
         </div>
         <div className="flex items-center gap-6">
-          <div className="hidden lg:flex items-center bg-surface-container-high rounded-full px-4 py-2 gap-2 border border-white/5">
-            <span className="material-symbols-outlined text-secondary opacity-70">search</span>
-            <input className="bg-transparent border-none focus:outline-none text-sm w-64 placeholder:text-neutral-500" placeholder="Tìm tên phim, diễn viên..." type="text" />
+          <div className="hidden lg:block relative" ref={searchRef}>
+            <form onSubmit={handleSearchSubmit}>
+              <div className="flex items-center bg-surface-container-high rounded-full px-4 py-2 gap-2 border border-white/5">
+                <span className="material-symbols-outlined text-secondary opacity-70">search</span>
+                <input
+                  className="bg-transparent border-none focus:outline-none text-sm w-64 placeholder:text-neutral-500"
+                  placeholder="Tìm tên phim, diễn viên..."
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearchInput}
+                  onFocus={() => setShowSuggestions(true)}
+                />
+              </div>
+            </form>
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full mt-2 w-full bg-surface-container-high rounded-xl border border-white/5 shadow-2xl overflow-hidden">
+                {suggestions.map((movie) => (
+                  <button
+                    key={movie.id}
+                    onClick={() => handleSuggestionClick(movie.id)}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left"
+                  >
+                    <img
+                      src={movie.posterUrl}
+                      alt={movie.tenPhim}
+                      className="w-10 h-14 rounded object-cover shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-on-surface truncate">{movie.tenPhim}</p>
+                      <p className="text-xs text-secondary truncate">{movie.theLoai} &middot; {movie.thoiLuong} phút</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-4 text-on-surface">
             {user ? (

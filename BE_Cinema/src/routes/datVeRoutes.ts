@@ -2,20 +2,14 @@ import { Router } from "express";
 import {
   datVe,
   lichSuGiaoDich,
+  adminLichSuGiaoDich,
 } from "../controllers/datve/datVeController";
 import { authenticateToken } from "../middlewares/authMiddleware";
+import { requireRole } from "../middlewares/roleMiddleware";
 import { validate } from "../middlewares/validateMiddleware";
-import Joi from "joi";
+import { datVeSchema } from "../validators/datVeValidator";
 
 const router = Router();
-
-const datVeSchema = Joi.object({
-  suatChieuId: Joi.string().uuid().required(),
-  gheIds: Joi.array().items(Joi.string().uuid()).min(1).required(),
-  phuongThuc: Joi.string()
-    .valid("VNPAY", "MOMO", "ZALOPAY", "CARD", "ATM")
-    .required(),
-});
 
 /**
  * @swagger
@@ -26,5 +20,6 @@ const datVeSchema = Joi.object({
 
 router.post("/", authenticateToken, validate(datVeSchema), datVe);
 router.get("/lich-su", authenticateToken, lichSuGiaoDich);
+router.get("/admin/lich-su", authenticateToken, requireRole("ADMIN"), adminLichSuGiaoDich);
 
 export default router;

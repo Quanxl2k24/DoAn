@@ -1,60 +1,50 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../../utils/api';
 
-const TopPerformers = () => {
+const TopPerformers = ({ days = 7 }) => {
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await api.get(`/admin/analytics/top-movies?days=${days}`);
+        setMovies(res.data.data || []);
+      } catch (err) {
+        console.error('Lỗi tải top phim:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [days]);
+
   return (
     <div className="bg-surface-container-low p-8 rounded-xl border border-white/5">
       <h2 className="font-headline text-xl font-bold tracking-tight mb-8">PHIM THỊNH HÀNH</h2>
-      <div className="space-y-6">
-
-        {/* Movie 1 */}
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-16 bg-surface rounded overflow-hidden flex-shrink-0">
-            <img
-              alt="Mắt Biếc"
-              className="w-full h-full object-cover"
-              src="/posterphim/matbiec.jpg"
-            />
-          </div>
-          <div className="flex-1">
-            <p className="font-bold text-sm uppercase">MẮT BIẾC</p>
-            <p className="text-xs text-gray-500">Doanh thu 42.3Tr</p>
-          </div>
-          <div className="text-tertiary text-xs font-bold">98%</div>
+      {loading ? (
+        <div className="text-center text-secondary py-10">Đang tải...</div>
+      ) : movies.length === 0 ? (
+        <div className="text-center text-secondary py-10">Chưa có dữ liệu</div>
+      ) : (
+        <div className="space-y-6">
+          {movies.map((movie, idx) => (
+            <div key={movie.phimId || idx} className="flex items-center gap-4">
+              <div className="w-12 h-16 bg-surface rounded overflow-hidden flex-shrink-0">
+                <img
+                  alt={movie.tenPhim}
+                  className="w-full h-full object-cover"
+                  src={movie.posterUrl || '/posterphim/dune.jpg'}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm uppercase truncate">{movie.tenPhim}</p>
+                <p className="text-xs text-gray-500">{movie.totalTickets} vé đã bán</p>
+              </div>
+            </div>
+          ))}
         </div>
-
-        {/* Movie 2 */}
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-16 bg-surface rounded overflow-hidden flex-shrink-0">
-            <img
-              alt="Mai"
-              className="w-full h-full object-cover"
-              src="/posterphim/mai.jpg"
-            />
-          </div>
-          <div className="flex-1">
-            <p className="font-bold text-sm uppercase">MAI</p>
-            <p className="text-xs text-gray-500">Doanh thu 38.1Tr</p>
-          </div>
-          <div className="text-tertiary text-xs font-bold">94%</div>
-        </div>
-
-        {/* Movie 3 */}
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-16 bg-surface rounded overflow-hidden flex-shrink-0">
-            <img
-              alt="ĐÀO, PHỞ VÀ PIANO"
-              className="w-full h-full object-cover"
-              src="/posterphim/piano.jpg"
-            />
-          </div>
-          <div className="flex-1">
-            <p className="font-bold text-sm uppercase">ĐÀO, PHỞ VÀ PIANO</p>
-            <p className="text-xs text-gray-500">Doanh thu 29.5Tr</p>
-          </div>
-          <div className="text-tertiary text-xs font-bold">89%</div>
-        </div>
-
-      </div>
+      )}
     </div>
   );
 };

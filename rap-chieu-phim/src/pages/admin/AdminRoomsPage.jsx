@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/admin/Sidebar';
 import AdminHeader from '../../components/admin/AdminHeader';
+import { SkeletonTable } from '../../components/Skeleton';
 import { Link } from 'react-router-dom';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
@@ -17,6 +18,7 @@ const AdminRoomsPage = () => {
     tenPhong: "",
     soHang: 10,
     soCot: 12,
+    trangThai: "HOAT_DONG",
   });
 
   const fetchPhongs = async () => {
@@ -58,7 +60,10 @@ const AdminRoomsPage = () => {
     }
     try {
       if (isEditing) {
-        await api.put(`/phongs/${currentPhongId}`, { tenPhong: form.tenPhong });
+        await api.put(`/phongs/${currentPhongId}`, {
+          tenPhong: form.tenPhong,
+          trangThai: form.trangThai,
+        });
         toast.success("Cập nhật phòng thành công");
       } else {
         await api.post("/phongs", {
@@ -91,14 +96,15 @@ const AdminRoomsPage = () => {
     setCurrentPhongId(phong.id);
     setForm({
       tenPhong: phong.tenPhong,
-      soHang: 0, // Không cho sửa sơ đồ ghế khi đã tạo
+      soHang: 0,
       soCot: 0,
+      trangThai: phong.trangThai,
     });
     setShowModal(true);
   };
 
   const resetForm = () => {
-    setForm({ tenPhong: "", soHang: 10, soCot: 12 });
+    setForm({ tenPhong: "", soHang: 10, soCot: 12, trangThai: "HOAT_DONG" });
     setIsEditing(false);
     setCurrentPhongId(null);
   };
@@ -132,7 +138,9 @@ const AdminRoomsPage = () => {
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-secondary">Đang tải...</div>
+          <div className="bg-surface-container-low rounded-2xl border border-white/5 overflow-hidden">
+            <SkeletonTable rows={5} cols={5} />
+          </div>
         ) : (
           <div className="bg-surface-container-low rounded-2xl border border-white/5 overflow-hidden">
             <div className="overflow-x-auto">
@@ -162,18 +170,51 @@ const AdminRoomsPage = () => {
                         <td className="p-6 text-secondary">{rapName}</td>
                         <td className="p-6 text-secondary">{phong.ghes?.length ?? 0} ghế</td>
                         <td className="p-6">
-                          <span className={`px-3 py-1 rounded text-xs font-bold flex items-center gap-2 w-fit ${
-                            phong.trangThai === "HOAT_DONG"
-                              ? "bg-green-500/10 text-green-500 border border-green-500/20"
-                              : "bg-red-500/10 text-red-500 border border-red-500/20"
-                          }`}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                            {phong.trangThai === "HOAT_DONG" ? "Hoạt động" : "Bảo trì"}
-                          </span>
+                          <div className="relative">
+                            <span
+                              onClick={() => document.getElementById(`status-${phong.id}`)?.classList.toggle('hidden')}
+                              className={`px-3 py-1 rounded text-xs font-bold flex items-center gap-2 w-fit cursor-pointer transition-all hover:opacity-80 ${
+                                phong.trangThai === "HOAT_DONG"
+                                  ? "bg-green-500/10 text-green-500 border border-green-500/20"
+                                  : phong.trangThai === "BAO_TRI"
+                                  ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
+                                  : "bg-red-500/10 text-red-500 border border-red-500/20"
+                              }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full bg-current ${
+                                phong.trangThai === "BAO_TRI" && "animate-pulse"
+                              }`}></span>
+                              {phong.trangThai === "HOAT_DONG" ? "Hoạt động" : phong.trangThai === "BAO_TRI" ? "Bảo trì" : "Ngừng hoạt động"}
+                            </span>
+                            <div id={`status-${phong.id}`} className="hidden absolute top-full left-0 mt-1 z-50 bg-[#1C1B1B] border border-white/10 rounded-xl shadow-2xl overflow-hidden min-w-[180px]">
+                              {["HOAT_DONG", "BAO_TRI", "NGUNG_HOAT_DONG"].map((stt) => (
+                                <button
+                                  key={stt}
+                                  onClick={async () => {
+                                    document.getElementById(`status-${phong.id}`)?.classList.add('hidden');
+                                    try {
+                                      await api.put(`/phongs/${phong.id}`, { trangThai: stt });
+                                      toast.success("Cập nhật trạng thái thành công");
+                                      fetchPhongs();
+                                    } catch {
+                                      toast.error("Lỗi cập nhật trạng thái");
+                                    }
+                                  }}
+                                  className={`w-full text-left px-4 py-3 text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors ${
+                                    phong.trangThai === stt ? "text-white bg-white/5" : "text-gray-400"
+                                  }`}
+                                >
+                                  <span className={`w-2 h-2 rounded-full ${
+                                    stt === "HOAT_DONG" ? "bg-green-500" : stt === "BAO_TRI" ? "bg-yellow-500" : "bg-red-500"
+                                  }`}></span>
+                                  {stt === "HOAT_DONG" ? "Hoạt động" : stt === "BAO_TRI" ? "Bảo trì" : "Ngừng hoạt động"}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         </td>
                         <td className="p-6">
                           <div className="flex items-center justify-end gap-2">
-                            <Link to={`/admin/seats?phongId=${phong.id}`} className="p-2 text-secondary hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Sơ đồ ghế">
+                            <Link to={`/admin/seats?phongId=${phong.id}`} className="p-2 text-secondary hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Sơ đồ ghế - Chọn để đổi loại ghế">
                               <span className="material-symbols-outlined text-xl">grid_view</span>
                             </Link>
                             <button 
@@ -217,6 +258,35 @@ const AdminRoomsPage = () => {
                   />
                 </div>
 
+                {isEditing && (
+                  <div>
+                    <label className="block text-sm font-bold text-gray-400 mb-2">Trạng thái</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {["HOAT_DONG", "BAO_TRI", "NGUNG_HOAT_DONG"].map((stt) => (
+                        <button
+                          key={stt}
+                          type="button"
+                          onClick={() => setForm({ ...form, trangThai: stt })}
+                          className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${
+                            form.trangThai === stt
+                              ? stt === "HOAT_DONG"
+                                ? "bg-green-500/20 text-green-400 border-green-500/40"
+                                : stt === "BAO_TRI"
+                                ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/40"
+                                : "bg-red-500/20 text-red-400 border-red-500/40"
+                              : "bg-white/5 text-gray-400 border-white/5 hover:bg-white/10"
+                          }`}
+                        >
+                          <span className={`block w-1.5 h-1.5 rounded-full mx-auto mb-1 ${
+                            stt === "HOAT_DONG" ? "bg-green-500" : stt === "BAO_TRI" ? "bg-yellow-500" : "bg-red-500"
+                          }`}></span>
+                          {stt === "HOAT_DONG" ? "Hoạt động" : stt === "BAO_TRI" ? "Bảo trì" : "Ngừng hoạt động"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {!isEditing && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -245,6 +315,18 @@ const AdminRoomsPage = () => {
                   </div>
                 )}
 
+                <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="material-symbols-outlined text-[#E50914] text-lg">info</span>
+                    <p className="text-gray-400 text-xs">
+                      Mặc định tất cả ghế tạo ra là <strong className="text-white">ghế Thường</strong>.
+                      Sau khi tạo phòng, bạn có thể vào{' '}
+                      <Link to="/admin/seats" className="text-[#E50914] underline">Sơ đồ ghế</Link>{' '}
+                      để đổi sang ghế VIP hoặc Ghế đôi.
+                    </p>
+                  </div>
+                </div>
+
                 <div className="flex gap-4 pt-4">
                   <button
                     type="button"
@@ -270,5 +352,3 @@ const AdminRoomsPage = () => {
 };
 
 export default AdminRoomsPage;
-
-
