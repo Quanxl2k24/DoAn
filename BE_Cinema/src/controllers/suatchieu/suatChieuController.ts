@@ -16,9 +16,12 @@ export const getSuatChieu = async (
       where.phong = { rapId };
     }
     if (ngay) {
-      const date = new Date(ngay);
-      const start = new Date(date.setHours(0, 0, 0, 0));
-      const end = new Date(date.setHours(23, 59, 59, 999));
+      const parts = ngay.split('-');
+      const y = Number(parts[0]);
+      const m = Number(parts[1]);
+      const d = Number(parts[2]);
+      const start = new Date(y, m - 1, d);
+      const end = new Date(y, m - 1, d, 23, 59, 59, 999);
       where.thoiGianBatDau = { gte: start, lte: end };
     }
 
@@ -60,7 +63,7 @@ export const createSuatChieu = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { phimId, phongId, thoiGianBatDau, giaSuatChieu } = req.body;
+    const { phimId, phongId, thoiGianBatDau, giaSuatChieu, heSoGia } = req.body;
     const phim = await prisma.phim.findUnique({ where: { id: phimId } });
     if (!phim) {
       res.status(404).json({ message: "Không tìm thấy phim" });
@@ -98,7 +101,8 @@ export const createSuatChieu = async (
         phongId, 
         thoiGianBatDau: start, 
         thoiGianKetThuc: end,
-        giaSuatChieu: giaSuatChieu ? parseFloat(giaSuatChieu) : phim.giaCoBan 
+        giaSuatChieu: giaSuatChieu ? parseFloat(giaSuatChieu) : phim.giaCoBan,
+        heSoGia: heSoGia ? parseFloat(heSoGia) : 1.0,
       },
     });
 

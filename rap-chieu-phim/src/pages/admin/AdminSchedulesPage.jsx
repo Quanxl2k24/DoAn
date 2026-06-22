@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 const AdminSchedulesPage = () => {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString('en-CA'));
 
   const location = useLocation();
 
@@ -23,7 +23,8 @@ const AdminSchedulesPage = () => {
     phimId: '',
     phongId: '',
     thoiGianBatDau: '',
-    giaSuatChieu: ''
+    giaSuatChieu: '',
+    heSoGia: '1.0'
   });
 
   const fetchSchedules = async () => {
@@ -99,7 +100,7 @@ const AdminSchedulesPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.phimId || !form.phongId || !form.thoiGianBatDau || !form.giaSuatChieu) {
+    if (!form.phimId || !form.phongId || !form.thoiGianBatDau || !form.giaSuatChieu || !form.heSoGia) {
       toast.error('Vui lòng điền đủ thông tin');
       return;
     }
@@ -113,7 +114,7 @@ const AdminSchedulesPage = () => {
       toast.success('Thêm suất chiếu thành công');
       setShowForm(false);
       // Reset form
-      setForm({ phimId: '', phongId: '', thoiGianBatDau: '', giaSuatChieu: '' });
+      setForm({ phimId: '', phongId: '', thoiGianBatDau: '', giaSuatChieu: '', heSoGia: '1.0' });
       setSelectedRap('');
       fetchSchedules();
     } catch (error) {
@@ -225,6 +226,22 @@ const AdminSchedulesPage = () => {
                 onChange={(e) => setForm({ ...form, thoiGianBatDau: e.target.value })}
                 className="w-full bg-white text-black px-4 py-2 rounded-lg border border-white/5" required />
             </div>
+            <div>
+              <label className="block text-sm font-bold mb-1">Hệ số giá</label>
+              <select
+                value={form.heSoGia}
+                onChange={(e) => setForm({ ...form, heSoGia: e.target.value })}
+                className="w-full bg-white text-black px-4 py-2 rounded-lg border border-white/5" required
+              >
+                <option value="1.0">Giá gốc (x1.0)</option>
+                <option value="0.8">Giảm 20% (x0.8)</option>
+                <option value="0.9">Giảm 10% (x0.9)</option>
+                <option value="1.1">Tăng 10% (x1.1)</option>
+                <option value="1.2">Tăng 20% (x1.2)</option>
+                <option value="1.3">Tăng 30% (x1.3)</option>
+                <option value="1.5">Tăng 50% (x1.5)</option>
+              </select>
+            </div>
             <div className="lg:col-span-4 mt-2">
               <button type="submit" className="bg-[#E50914] text-white px-8 py-3 rounded-xl font-bold w-fit">
                 LƯU SUẤT CHIẾU
@@ -245,6 +262,7 @@ const AdminSchedulesPage = () => {
                     <th className="p-6 font-medium">Phim</th>
                     <th className="p-6 font-medium">Phòng</th>
                     <th className="p-6 font-medium">Giá vé</th>
+                    <th className="p-6 font-medium">Hệ số giá</th>
                     <th className="p-6 font-medium">Tỷ lệ lấp đầy</th>
                     <th className="p-6 font-medium">Trạng thái</th>
                     <th className="p-6 font-medium text-right">Thao tác</th>
@@ -273,6 +291,17 @@ const AdminSchedulesPage = () => {
                         <td className="p-6 text-secondary">{sc.phong?.tenPhong || 'N/A'}</td>
                         <td className="p-6">
                           <div className="font-bold text-on-surface">{(sc.giaSuatChieu || sc.phim?.giaCoBan || 0).toLocaleString('vi-VN')}đ</div>
+                        </td>
+                        <td className="p-6">
+                          <span className={`px-2 py-1 rounded text-xs font-bold ${
+                            (sc.heSoGia || 1) > 1.0
+                              ? 'bg-red-500/10 text-red-500'
+                              : (sc.heSoGia || 1) < 1.0
+                                ? 'bg-green-500/10 text-green-500'
+                                : 'bg-white/5 text-secondary'
+                          }`}>
+                            x{sc.heSoGia || 1}
+                          </span>
                         </td>
                         <td className="p-6">
                           <div className="flex items-center gap-3">

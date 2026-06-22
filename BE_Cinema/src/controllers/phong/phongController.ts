@@ -42,11 +42,11 @@ export const createPhong = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { rapId, tenPhong, soHang, soCot } = req.body;
+    const { rapId, tenPhong, soHang, soCot, trangThai } = req.body;
     
     // 1. Tạo phòng chiếu
     const phong = await prisma.phongChieu.create({
-      data: { rapId, tenPhong },
+      data: { rapId, tenPhong, trangThai: trangThai || "HOAT_DONG" },
     });
 
     // 2. Tự động tạo ghế nếu có soHang và soCot

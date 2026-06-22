@@ -1,11 +1,10 @@
 import Joi from "joi";
 
 export const datVeSchema = Joi.object({
-  suatChieuId: Joi.string().uuid().required().messages({
+  suatChieuId: Joi.string().required().messages({
     "any.required": "Suất chiếu là bắt buộc",
-    "string.guid": "Mã suất chiếu không hợp lệ",
   }),
-  gheIds: Joi.array().items(Joi.string().uuid()).min(1).required().messages({
+  gheIds: Joi.array().items(Joi.string()).min(1).required().messages({
     "any.required": "Ghế là bắt buộc",
     "array.min": "Phải chọn ít nhất 1 ghế",
   }),

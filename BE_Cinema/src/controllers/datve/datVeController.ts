@@ -62,9 +62,10 @@ export const datVe = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Calculate total
+    // Calculate total (with price multiplier)
+    const heSoGia = suatChieu.heSoGia || 1.0;
     const tongTien = ghes.reduce(
-      (sum, ghe) => sum + suatChieu.phim.giaCoBan + ghe.loaiGhe.phuPhi,
+      (sum, ghe) => sum + Math.round((suatChieu.giaSuatChieu || suatChieu.phim.giaCoBan) * heSoGia) + ghe.loaiGhe.phuPhi,
       0
     );
 
@@ -79,6 +80,7 @@ export const datVe = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Create tickets
+    const giaCoBan = Math.round((suatChieu.giaSuatChieu || suatChieu.phim.giaCoBan) * heSoGia);
     const ves = await Promise.all(
       ghes.map((ghe) =>
         prisma.ve.create({
@@ -87,7 +89,7 @@ export const datVe = async (req: Request, res: Response): Promise<void> => {
             suatChieuId,
             gheId: ghe.id,
             thanhToanId: thanhToan.id,
-            giaTien: suatChieu.phim.giaCoBan + ghe.loaiGhe.phuPhi,
+            giaTien: giaCoBan + ghe.loaiGhe.phuPhi,
             trangThai: "DA_DAT",
           },
         })
@@ -108,9 +110,9 @@ export const datVe = async (req: Request, res: Response): Promise<void> => {
     const chiTiet = ghes.map((ghe) => ({
       ...ghe,
       loaiGhe: ghe.loaiGhe,
-      giaCoBan: suatChieu.phim.giaCoBan,
+      giaCoBan,
       phuPhi: ghe.loaiGhe.phuPhi,
-      thanhTien: suatChieu.phim.giaCoBan + ghe.loaiGhe.phuPhi,
+      thanhTien: giaCoBan + ghe.loaiGhe.phuPhi,
     }));
 
     res.status(201).json({
@@ -152,11 +154,13 @@ export const adminLichSuGiaoDich = async (
 
     if (fromDate || toDate) {
       where.thoiGian = {};
-      if (fromDate) where.thoiGian.gte = new Date(fromDate as string);
+      if (fromDate) {
+        const fParts = (fromDate as string).split("-");
+        where.thoiGian.gte = new Date(Number(fParts[0]), Number(fParts[1]) - 1, Number(fParts[2]));
+      }
       if (toDate) {
-        const endDate = new Date(toDate as string);
-        endDate.setHours(23, 59, 59, 999);
-        where.thoiGian.lte = endDate;
+        const tParts = (toDate as string).split("-");
+        where.thoiGian.lte = new Date(Number(tParts[0]), Number(tParts[1]) - 1, Number(tParts[2]), 23, 59, 59, 999);
       }
     }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Skeleton from '../components/Skeleton';
@@ -19,6 +19,7 @@ const SeatSelectionPage = () => {
   const [heldSeats, setHeldSeats] = useState(null);
   const [holdUntil, setHoldUntil] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (!suatChieuId) return;
@@ -91,13 +92,18 @@ const SeatSelectionPage = () => {
       return;
     }
 
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+
     // If seats are already held, go straight to payment
     if (heldSeats) {
+      submittingRef.current = false;
+      setSubmitting(false);
       navigateToPayment(selectedSeats, holdUntil);
       return;
     }
 
-    setSubmitting(true);
     try {
       // Lock seats
       const res = await api.post('/ghes/giu', {
@@ -105,21 +111,24 @@ const SeatSelectionPage = () => {
         gheIds: selectedSeats,
       });
 
-      const holdUntilTime = res.data.hetHanLuc;
+      const holdUntilTime = new Date(res.data.hetHanLuc).getTime();
 
-      navigateToPayment(selectedSeats, new Date(holdUntilTime).getTime());
+      navigateToPayment(selectedSeats, holdUntilTime);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Lỗi giữ ghế');
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
 
   const navigateToPayment = (gheIds, holdUntilTime) => {
     const basePrice = seatData?.suatChieu?.giaSuatChieu || seatData?.phim?.giaCoBan || 120000;
+    const heSoGia = seatData?.suatChieu?.heSoGia || 1.0;
+    const adjustedPrice = Math.round(basePrice * heSoGia);
     const selectedGhes = seatData?.ghes?.filter((g) => gheIds.includes(g.id)) || [];
     const total = selectedGhes.reduce(
-      (sum, g) => sum + basePrice + (g.phuPhi || 0),
+      (sum, g) => sum + adjustedPrice + (g.phuPhi || 0),
       0
     );
     navigate(
@@ -348,8 +357,9 @@ const SeatSelectionPage = () => {
                 {(selectedSeats
                   .reduce((sum, id) => {
                     const basePrice = seatData?.suatChieu?.giaSuatChieu || seatData?.phim?.giaCoBan || 120000;
+                    const heSoGia = seatData?.suatChieu?.heSoGia || 1.0;
                     const ghe = seatData.ghes.find((g) => g.id === id);
-                    return sum + basePrice + (ghe?.phuPhi || 0);
+                    return sum + Math.round(basePrice * heSoGia) + (ghe?.phuPhi || 0);
                   }, 0)
                 ).toLocaleString('vi-VN')}{' '}
                 đ

@@ -251,27 +251,49 @@ async function main() {
   console.log("✅ Movies created");
 
   // === 7. Showtimes ===
-  const HCM_PHONG_IDS = ["phong-rap1-1", "phong-rap1-2", "phong-rap1-3"];
+  const PHONG_IDS_RAP1 = ["phong-rap1-1", "phong-rap1-2", "phong-rap1-3", "phong-rap1-4"];
+  const PHONG_IDS_RAP2 = ["phong-rap2-1", "phong-rap2-2"];
   const today = new Date();
   const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-  const showtimesData = [
-    { phimId: "phim-dune", phongId: HCM_PHONG_IDS[0]!, hour: 9, minute: 30 },
-    { phimId: "phim-dune", phongId: HCM_PHONG_IDS[1]!, hour: 12, minute: 0 },
-    { phimId: "phim-dune", phongId: HCM_PHONG_IDS[2]!, hour: 14, minute: 45 },
-    { phimId: "phim-dune", phongId: HCM_PHONG_IDS[0]!, hour: 18, minute: 15 },
-    { phimId: "phim-dune", phongId: HCM_PHONG_IDS[1]!, hour: 20, minute: 30 },
-    { phimId: "phim-dune", phongId: HCM_PHONG_IDS[2]!, hour: 22, minute: 45 },
-    { phimId: "phim-bongde", phongId: HCM_PHONG_IDS[0]!, hour: 21, minute: 0 },
-    { phimId: "phim-bongde", phongId: HCM_PHONG_IDS[1]!, hour: 23, minute: 15 },
-    { phimId: "phim-latmat7", phongId: HCM_PHONG_IDS[2]!, hour: 10, minute: 0 },
-    { phimId: "phim-latmat7", phongId: HCM_PHONG_IDS[0]!, hour: 13, minute: 15 },
-    { phimId: "phim-latmat7", phongId: HCM_PHONG_IDS[1]!, hour: 16, minute: 0 },
-    { phimId: "phim-latmat7", phongId: HCM_PHONG_IDS[2]!, hour: 19, minute: 45 },
+  // Xoá suất chiếu 7 ngày tới trước khi tạo lại (idempotent)
+  const sevenDaysLater = new Date(startOfDay);
+  sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+  await prisma.suatChieu.deleteMany({
+    where: {
+      thoiGianBatDau: { gte: startOfDay, lt: sevenDaysLater },
+    },
+  });
+
+  // Suất chiếu cho rạp 1 (Cine Première Vincom Đồng Khởi)
+  const showtimesRap1 = [
+    { phimId: "phim-dune", phongId: PHONG_IDS_RAP1[0]!, hour: 9, minute: 30 },
+    { phimId: "phim-dune", phongId: PHONG_IDS_RAP1[1]!, hour: 12, minute: 0 },
+    { phimId: "phim-dune", phongId: PHONG_IDS_RAP1[2]!, hour: 14, minute: 45 },
+    { phimId: "phim-dune", phongId: PHONG_IDS_RAP1[0]!, hour: 18, minute: 15 },
+    { phimId: "phim-dune", phongId: PHONG_IDS_RAP1[1]!, hour: 20, minute: 30 },
+    { phimId: "phim-dune", phongId: PHONG_IDS_RAP1[2]!, hour: 22, minute: 45 },
+    { phimId: "phim-bongde", phongId: PHONG_IDS_RAP1[0]!, hour: 21, minute: 0 },
+    { phimId: "phim-bongde", phongId: PHONG_IDS_RAP1[1]!, hour: 23, minute: 15 },
+    { phimId: "phim-latmat7", phongId: PHONG_IDS_RAP1[2]!, hour: 10, minute: 0 },
+    { phimId: "phim-latmat7", phongId: PHONG_IDS_RAP1[0]!, hour: 13, minute: 15 },
+    { phimId: "phim-latmat7", phongId: PHONG_IDS_RAP1[1]!, hour: 16, minute: 0 },
+    { phimId: "phim-latmat7", phongId: PHONG_IDS_RAP1[2]!, hour: 19, minute: 45 },
   ];
 
+  // Suất chiếu cho rạp 2 (Cine Première Lê Văn Việt)
+  const showtimesRap2 = [
+    { phimId: "phim-dune", phongId: PHONG_IDS_RAP2[0]!, hour: 10, minute: 0 },
+    { phimId: "phim-dune", phongId: PHONG_IDS_RAP2[1]!, hour: 15, minute: 30 },
+    { phimId: "phim-bongde", phongId: PHONG_IDS_RAP2[0]!, hour: 18, minute: 0 },
+    { phimId: "phim-latmat7", phongId: PHONG_IDS_RAP2[1]!, hour: 20, minute: 0 },
+    { phimId: "phim-latmat7", phongId: PHONG_IDS_RAP2[0]!, hour: 22, minute: 30 },
+  ];
+
+  const allShowtimes = [...showtimesRap1, ...showtimesRap2];
+
   for (let day = 0; day < 7; day++) {
-    for (const st of showtimesData) {
+    for (const st of allShowtimes) {
       const phim = movies.find((m) => m.id === st.phimId)!;
       const batDau = new Date(startOfDay);
       batDau.setDate(batDau.getDate() + day);
@@ -289,7 +311,7 @@ async function main() {
       });
     }
   }
-  console.log("✅ Showtimes created for 7 days");
+  console.log("✅ Showtimes created for 7 days (both cinemas)");
 
   console.log("🎉 Seed data hoàn tất!");
 }

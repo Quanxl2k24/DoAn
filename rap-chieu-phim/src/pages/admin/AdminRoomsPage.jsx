@@ -19,6 +19,7 @@ const AdminRoomsPage = () => {
     soHang: 10,
     soCot: 12,
     trangThai: "HOAT_DONG",
+    rapId: "",
   });
 
   const fetchPhongs = async () => {
@@ -54,10 +55,6 @@ const AdminRoomsPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedRap) {
-      toast.error("Vui lòng chọn rạp chiếu trước khi tạo phòng");
-      return;
-    }
     try {
       if (isEditing) {
         await api.put(`/phongs/${currentPhongId}`, {
@@ -66,14 +63,20 @@ const AdminRoomsPage = () => {
         });
         toast.success("Cập nhật phòng thành công");
       } else {
+        if (!form.rapId) {
+          toast.error("Vui lòng chọn rạp chiếu");
+          return;
+        }
         await api.post("/phongs", {
-          ...form,
-          rapId: selectedRap,
+          tenPhong: form.tenPhong,
+          soHang: form.soHang,
+          soCot: form.soCot,
+          rapId: form.rapId,
         });
         toast.success("Tạo phòng và sơ đồ ghế thành công");
       }
       setShowModal(false);
-      resetForm();
+      resetForm(selectedRap);
       fetchPhongs();
     } catch (err) {
       toast.error(err.response?.data?.message || "Lỗi xử lý");
@@ -103,8 +106,8 @@ const AdminRoomsPage = () => {
     setShowModal(true);
   };
 
-  const resetForm = () => {
-    setForm({ tenPhong: "", soHang: 10, soCot: 12, trangThai: "HOAT_DONG" });
+  const resetForm = (rapId = "") => {
+    setForm({ tenPhong: "", soHang: 10, soCot: 12, trangThai: "HOAT_DONG", rapId });
     setIsEditing(false);
     setCurrentPhongId(null);
   };
@@ -129,7 +132,7 @@ const AdminRoomsPage = () => {
               {raps.map(r => <option key={r.id} value={r.id}>{r.tenRap}</option>)}
             </select>
             <button 
-              onClick={() => { resetForm(); setShowModal(true); }}
+              onClick={() => { resetForm(selectedRap); setShowModal(true); }}
               className="bg-[#E50914] hover:bg-red-700 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors shadow-lg shadow-red-900/20">
               <span className="material-symbols-outlined">add</span>
               Thêm Phòng Mới
@@ -288,6 +291,19 @@ const AdminRoomsPage = () => {
                 )}
 
                 {!isEditing && (
+                  <>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-400 mb-2">Rạp chiếu</label>
+                    <select
+                      value={form.rapId}
+                      onChange={(e) => setForm({ ...form, rapId: e.target.value })}
+                      className="w-full bg-white text-black px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-[#E50914] transition-all"
+                      required
+                    >
+                      <option value="">-- Chọn rạp --</option>
+                      {raps.map(r => <option key={r.id} value={r.id}>{r.tenRap}</option>)}
+                    </select>
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-bold text-gray-400 mb-2">Số hàng ghế</label>
@@ -313,6 +329,7 @@ const AdminRoomsPage = () => {
                       />
                     </div>
                   </div>
+                  </>
                 )}
 
                 <div className="p-4 bg-white/5 rounded-xl border border-white/5">

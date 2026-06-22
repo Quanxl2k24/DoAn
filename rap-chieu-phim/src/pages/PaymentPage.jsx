@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -18,10 +18,11 @@ const PaymentPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('MOMO');
   const [submitting, setSubmitting] = useState(false);
   const [bookingInfo, setBookingInfo] = useState(null);
-  const [holdUntil, setHoldUntil] = useState(initialHoldUntil ? new Date(initialHoldUntil).getTime() : null);
+  const [holdUntil, setHoldUntil] = useState(initialHoldUntil ? Number(initialHoldUntil) : null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [expired, setExpired] = useState(false);
   const [reholding, setRekolding] = useState(false);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (!suatChieuId || gheIds.length === 0) return;
@@ -49,26 +50,27 @@ const PaymentPage = () => {
     }
   }, [user, navigate]);
 
-  // Sync hold status from server on mount
-  useEffect(() => {
+  const checkHoldStatus = useCallback(async () => {
     if (!suatChieuId || !user) return;
-    const checkHold = async () => {
-      try {
-        const res = await api.get(`/ghes/giu/${suatChieuId}`);
-        if (res.data.data) {
-          setHoldUntil(new Date(res.data.data.hetHanLuc).getTime());
-          setExpired(false);
-        } else {
-          setHoldUntil(null);
-          setTimeLeft(0);
-          setExpired(true);
-        }
-      } catch {
+    try {
+      const res = await api.get(`/ghes/giu/${suatChieuId}`);
+      if (res.data.data) {
+        setHoldUntil(new Date(res.data.data.hetHanLuc).getTime());
+        setExpired(false);
+      } else {
+        setHoldUntil(null);
+        setTimeLeft(0);
         setExpired(true);
       }
-    };
-    checkHold();
+    } catch {
+      setExpired(true);
+    }
   }, [suatChieuId, user]);
+
+  // Sync hold status from server on mount
+  useEffect(() => {
+    checkHoldStatus();
+  }, [checkHoldStatus]);
 
   // Countdown timer
   useEffect(() => {
@@ -120,6 +122,8 @@ const PaymentPage = () => {
       return;
     }
 
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       await api.post('/dat-ve', {
@@ -130,8 +134,15 @@ const PaymentPage = () => {
       toast.success('Đặt vé thành công!');
       navigate('/history');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Thanh toán thất bại');
+      const message = error.response?.data?.message || error.response?.data?.error || '';
+      toast.error(message || 'Thanh toán thất bại');
+      if (message.includes('hết hạn') || message.includes('đã được đặt')) {
+        setExpired(true);
+        setHoldUntil(null);
+        setTimeLeft(0);
+      }
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -256,7 +267,7 @@ const PaymentPage = () => {
                           )}
                         </span>
                         <span className="font-bold text-on-surface text-xs">
-                          {(bookingInfo.suatChieu?.giaSuatChieu || bookingInfo.phim?.giaCoBan || 120000).toLocaleString('vi-VN')}đ
+                          {Math.round((bookingInfo.suatChieu?.giaSuatChieu || bookingInfo.phim?.giaCoBan || 120000) * (bookingInfo.suatChieu?.heSoGia || 1)).toLocaleString('vi-VN')}đ
                           {g.phuPhi > 0 && (
                             <span className="text-[#E50914]"> +{g.phuPhi.toLocaleString('vi-VN')}đ</span>
                           )}

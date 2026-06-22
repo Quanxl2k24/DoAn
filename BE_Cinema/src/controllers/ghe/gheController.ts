@@ -72,6 +72,7 @@ export const getTrangThaiGhe = async (
           thoiGianBatDau: suatChieu.thoiGianBatDau,
           thoiGianKetThuc: suatChieu.thoiGianKetThuc,
           giaSuatChieu: suatChieu.giaSuatChieu || suatChieu.phim.giaCoBan,
+          heSoGia: suatChieu.heSoGia || 1.0,
         },
         phim: {
           id: suatChieu.phim.id,

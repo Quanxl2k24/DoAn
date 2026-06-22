@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -7,13 +7,13 @@ export default defineConfig({
   server: {
     port: 5173,
     allowedHosts: [
-      'laptop-discover-motto.ngrok-free.dev'
+      'covetable-unthreateningly-nia.ngrok-free.dev'
     ],
     proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
+      "/api": {
+        target: "http://localhost:3000",
         changeOrigin: true,
       },
     },
   },
-})
+});

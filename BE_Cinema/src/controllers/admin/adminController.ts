@@ -1,6 +1,18 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prisma";
 
+const toLocalDateStr = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+const parseLocalDate = (dateStr: string) => {
+  const parts = dateStr.split("-");
+  return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+};
+
 export const getAnalytics = async (
   req: Request,
   res: Response,
@@ -105,52 +117,44 @@ export const getWeeklyRevenue = async (
     monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
     monday.setHours(0, 0, 0, 0);
 
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    sunday.setHours(23, 59, 59, 999);
-
-    const result: Array<{ day: string; revenue: number }> =
+    const result: Array<{ day: Date; revenue: bigint }> =
       await prisma.$queryRawUnsafe(
         `
         SELECT
-          DATE_TRUNC('day', "thoiGian")::date AS "day",
+          DATE_TRUNC('day', "thoiGian" AT TIME ZONE 'Asia/Saigon')::date AS "day",
           COALESCE(SUM("tongTien"), 0) AS revenue
         FROM "ThanhToan"
         WHERE "trangThai" = 'THANH_CONG'
-          AND "thoiGian" >= $1::date
-          AND "thoiGian" < ($1::date + INTERVAL '7 days')
-        GROUP BY DATE_TRUNC('day', "thoiGian")
+          AND "thoiGian" >= $1::timestamptz
+          AND "thoiGian" < ($1::timestamptz + INTERVAL '7 days')
+        GROUP BY DATE_TRUNC('day', "thoiGian" AT TIME ZONE 'Asia/Saigon')
         ORDER BY "day" ASC
         `,
-        monday.toISOString().split("T")[0],
+        monday,
       );
 
     const revenueByDay = new Map(
       result.map((r) => [
-        new Date(r.day).toISOString().split("T")[0],
+        toLocalDateStr(new Date(r.day)),
         Number(r.revenue),
       ]),
     );
 
     const data: Array<{
       day: string;
-      label: any;
+      label: string;
       date: string;
       revenue: number;
     }> = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date(monday);
       d.setDate(monday.getDate() + i);
-      const key = d.toISOString().split("T")[0] || "";
+      const key = toLocalDateStr(d);
       const label = dayNames[(i + 1) % 7] || "";
       data.push({
         day: key,
         label,
-        date:
-          d.toLocaleDateString("vi-VN", {
-            day: "2-digit",
-            month: "2-digit",
-          }) || "",
+        date: `${key.slice(8, 10)}/${key.slice(5, 7)}`,
         revenue: revenueByDay.get(key) || 0,
       });
     }

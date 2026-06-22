@@ -1,0 +1,140 @@
+// Database Diagram for Cinema Booking System (Cine Première)
+// Generated from Prisma schema - use at dbdiagram.io
+
+Table users {
+  id uuid [pk]
+  email varchar(255) [unique, not null]
+  password varchar(255) [not null]
+  roleId uuid [not null]
+  fullName varchar(255)
+  phoneNumber varchar(20)
+  refreshToken varchar(255)
+  createdAt timestamp [default: `now()`]
+}
+
+Table roles {
+  id uuid [pk]
+  name varchar(50) [unique, not null]
+}
+
+Table permissions {
+  id uuid [pk]
+  action varchar(100) [unique, not null]
+}
+
+Table role_permissions {
+  roleId uuid [pk]
+  permissionId uuid [pk]
+}
+
+Table rap_chieus {
+  id uuid [pk]
+  tenRap varchar(255) [not null]
+  diaChi varchar(255) [not null]
+  trangThai varchar(20) [default: 'HOAT_DONG']
+}
+
+Table phong_chieus {
+  id uuid [pk]
+  rapId uuid [not null]
+  tenPhong varchar(255) [not null]
+  trangThai varchar(20) [default: 'HOAT_DONG']
+}
+
+Table phims {
+  id uuid [pk]
+  tenPhim varchar(255) [not null]
+  moTa text [not null]
+  posterUrl varchar(500) [not null]
+  backdropUrl varchar(500)
+  trailerUrl varchar(500)
+  thoiLuong int [not null]
+  ngayKhoiChieu timestamp [not null]
+  theLoai varchar(100) [not null]
+  ngonNgu varchar(50) [not null]
+  daoDien varchar(255)
+  dienVien varchar(255)
+  phanLoaiTuoi varchar(10) [not null]
+  giaCoBan float [not null]
+  trangThai varchar(20) [default: 'DANG_CHIEU']
+}
+
+Table loai_ghes {
+  id uuid [pk]
+  tenLoai varchar(50) [not null]
+  phuPhi float [default: 0]
+}
+
+Table ghes {
+  id uuid [pk]
+  phongId uuid [not null]
+  loaiGheId uuid [not null]
+  hang varchar(5) [not null]
+  cot int [not null]
+  tenGhe varchar(10) [not null]
+  trangThai varchar(20) [default: 'HOAT_DONG']
+}
+
+Table suat_chieus {
+  id uuid [pk]
+  phimId uuid [not null]
+  phongId uuid [not null]
+  thoiGianBatDau timestamp [not null]
+  thoiGianKetThuc timestamp [not null]
+  giaSuatChieu float
+}
+
+Table giu_ghes {
+  id uuid [pk]
+  gheId uuid [not null]
+  suatChieuId uuid [not null]
+  userId uuid [not null]
+  thoiGianGiu timestamp [default: `now()`]
+  thoiGianHetHan timestamp [not null]
+  trangThai varchar(20) [default: 'DANG_GIU']
+}
+
+Table thanh_toans {
+  id uuid [pk]
+  userId uuid [not null]
+  tongTien float [not null]
+  phuongThuc varchar(50) [not null]
+  trangThai varchar(20) [default: 'CHUA_THANH_TOAN']
+  thoiGian timestamp [default: `now()`]
+}
+
+Table ves {
+  id uuid [pk]
+  userId uuid [not null]
+  suatChieuId uuid [not null]
+  gheId uuid [not null]
+  thanhToanId uuid
+  giaTien float [not null]
+  trangThai varchar(20) [default: 'DA_DAT']
+  thoiGianDat timestamp [default: `now()`]
+}
+
+// === Relationships ===
+
+Ref: users.roleId > roles.id
+Ref: role_permissions.roleId > roles.id
+Ref: role_permissions.permissionId > permissions.id
+
+Ref: phong_chieus.rapId > rap_chieus.id
+
+Ref: ghes.phongId > phong_chieus.id
+Ref: ghes.loaiGheId > loai_ghes.id
+
+Ref: suat_chieus.phimId > phims.id
+Ref: suat_chieus.phongId > phong_chieus.id
+
+Ref: giu_ghes.gheId > ghes.id
+Ref: giu_ghes.suatChieuId > suat_chieus.id
+Ref: giu_ghes.userId > users.id
+
+Ref: thanh_toans.userId > users.id
+
+Ref: ves.userId > users.id
+Ref: ves.suatChieuId > suat_chieus.id
+Ref: ves.gheId > ghes.id
+Ref: ves.thanhToanId > thanh_toans.id

@@ -28,39 +28,35 @@ const RevenueChart = () => {
   };
 
   const isToday = (day) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA');
     return day === today;
   };
 
   return (
-    <div className="lg:col-span-2 bg-surface-container-lowest p-8 rounded-xl border border-white/5">
-      <div className="flex justify-between items-center mb-10">
+    <div className="lg:col-span-2 bg-surface-container-lowest p-8 rounded-xl border border-white/5 flex flex-col h-full">
+      <div className="flex justify-between items-center mb-10 flex-shrink-0">
         <h2 className="font-headline text-xl font-bold tracking-tight">DOANH THU TUẦN</h2>
         <span className="text-xs text-gray-500">7 ngày trong tuần</span>
       </div>
-      <div className="flex items-end justify-between h-64 gap-4 px-2">
+      <div className="flex items-end justify-between gap-4 px-2 flex-1">
         {loading ? (
-          <div className="w-full text-center text-secondary">Đang tải...</div>
+          <div className="w-full text-center text-secondary self-center">Đang tải...</div>
         ) : chartData?.length > 0 ? (
           chartData.map((item) => {
-            const heightPercent = Math.max((item.revenue / maxValue) * 100, 3);
+            const pct = maxValue > 0 ? (item.revenue / maxValue) * 100 : 0;
             const today = isToday(item.day);
             return (
-              <div key={item.day} className="flex-1 flex flex-col items-center gap-4 h-full justify-end">
+              <div key={item.day} className="flex-1 flex flex-col items-center justify-end gap-0.5 h-full">
+                <span className={`text-[10px] font-black leading-tight ${
+                  today ? 'text-[#E50914]' : 'text-gray-400'
+                }`}>
+                  {fmt(item.revenue)}đ
+                </span>
                 <div
-                  className={`w-full rounded-t-sm transition-colors group relative cursor-pointer ${
-                    today
-                      ? 'bg-[#E50914] hover:bg-red-600'
-                      : 'bg-primary-container hover:bg-red-600'
-                  }`}
-                  style={{ height: `${heightPercent}%` }}
-                >
-                  <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-surface-container-highest px-3 py-1.5 rounded-lg text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg pointer-events-none">
-                    <div className="text-[#E50914]">{fmt(item.revenue)}đ</div>
-                    <div className="text-gray-400 text-[10px]">{item.label} - {item.date}</div>
-                  </div>
-                </div>
-                <div className="flex flex-col items-center gap-0.5">
+                  className="w-full rounded-t-sm bg-[#E50914] transition-all flex-shrink-0"
+                  style={{ height: `${Math.max(pct * 0.75, 3)}%`, minHeight: item.revenue > 0 ? '20px' : '4px' }}
+                />
+                <div className="flex flex-col items-center gap-0">
                   <span className={`text-[10px] font-bold leading-tight ${
                     today ? 'text-[#E50914]' : 'text-gray-500'
                   }`}>
@@ -72,7 +68,7 @@ const RevenueChart = () => {
             );
           })
         ) : (
-          <div className="w-full text-center text-secondary py-12">Chưa có dữ liệu</div>
+          <div className="w-full text-center text-secondary py-12 self-center">Chưa có dữ liệu</div>
         )}
       </div>
     </div>

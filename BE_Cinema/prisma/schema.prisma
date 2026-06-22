@@ -109,6 +109,7 @@ model SuatChieu {
   thoiGianBatDau  DateTime
   thoiGianKetThuc DateTime
   giaSuatChieu    Float?
+  heSoGia         Float      @default(1.0)
   giuGhes         GiuGhe[]
   phim            Phim       @relation(fields: [phimId], references: [id])
   phong           PhongChieu @relation(fields: [phongId], references: [id])

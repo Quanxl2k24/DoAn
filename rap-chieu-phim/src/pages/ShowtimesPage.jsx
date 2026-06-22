@@ -21,7 +21,7 @@ const ShowtimesPage = () => {
     return {
       date: d.getDate().toString(),
       day: i === 0 ? 'Hôm nay' : dayNames[d.getDay()],
-      fullDate: d.toISOString().split('T')[0],
+      fullDate: d.toLocaleDateString('en-CA'),
       active: i === 0,
     };
   });
