@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cinema-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Qwerty@123
+      POSTGRES_DB: Cinema_local
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./BE_Cinema
+    container_name: cinema-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: Qwerty@123
+      DB_NAME: Cinema_local
+      DATABASE_URL: "postgresql://postgres:Qwerty%40123@postgres:5432/Cinema_local?schema=public"
+      JWT_SECRET: "$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldBAQH6r1Zk4yN2rA1e"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./rap-chieu-phim
+    container_name: cinema-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
