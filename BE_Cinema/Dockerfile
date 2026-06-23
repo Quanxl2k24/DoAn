@@ -16,6 +16,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/src/generated ./src/generated
 COPY prisma/ ./prisma/
 COPY prisma.config.ts ./
 
