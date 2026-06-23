@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: Qwerty@123
       POSTGRES_DB: Cinema_local
     ports:
-      - "5432:5432"
+      - "54321:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -31,7 +31,7 @@ services:
       DB_PASSWORD: Qwerty@123
       DB_NAME: Cinema_local
       DATABASE_URL: "postgresql://postgres:Qwerty%40123@postgres:5432/Cinema_local?schema=public"
-      JWT_SECRET: "$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldBAQH6r1Zk4yN2rA1e"
+      JWT_SECRET: "$$2b$$10$$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldBAQH6r1Zk4yN2rA1e"
     depends_on:
       postgres:
         condition: service_healthy
