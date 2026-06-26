@@ -128,11 +128,12 @@ const SeatSelectionPage = () => {
     const ngayChieu = new Date(seatData?.suatChieu?.thoiGianBatDau);
     const gioBatDau = ngayChieu.getHours();
     const selectedGhes = seatData?.ghes?.filter((g) => gheIds.includes(g.id)) || [];
-    const dsNgayLe = seatData?.ngayLes || [];
+    const dsNgayLe = seatData?.danhSachNgayLe || [];
     const apDungCuoiTuan = seatData?.suatChieu?.apDungPhuPhiCuoiTuan ?? true;
     const apDungNgayLe = seatData?.suatChieu?.apDungPhuPhiNgayLe ?? true;
+    const apDungTheoGio = seatData?.suatChieu?.apDungPhuPhiTheoGio ?? true;
     const total = selectedGhes.reduce((sum, g) => {
-      return sum + tinhGiaVe(giaCoBan, g.loaiGhe, gioBatDau, ngayChieu, dsNgayLe, apDungCuoiTuan, apDungNgayLe);
+      return sum + tinhGiaVe(giaCoBan, g.loaiGhe, gioBatDau, ngayChieu, dsNgayLe, apDungCuoiTuan, apDungNgayLe, apDungTheoGio);
     }, 0);
     navigate(
       `/payment?suatChieuId=${suatChieuId}&gheIds=${gheIds.join(',')}&total=${total}&holdUntil=${holdUntilTime}`
@@ -363,10 +364,11 @@ const SeatSelectionPage = () => {
                     const ghe = seatData.ghes.find((g) => g.id === id);
                     const ngayChieu = new Date(seatData?.suatChieu?.thoiGianBatDau);
                     const gioBatDau = ngayChieu.getHours();
-                    const dsNgayLe = seatData?.ngayLes || [];
+    const dsNgayLe = seatData?.danhSachNgayLe || [];
                     const apDungCuoiTuan = seatData?.suatChieu?.apDungPhuPhiCuoiTuan ?? true;
                     const apDungNgayLe = seatData?.suatChieu?.apDungPhuPhiNgayLe ?? true;
-                    return sum + tinhGiaVe(giaCoBan, ghe?.loaiGhe, gioBatDau, ngayChieu, dsNgayLe, apDungCuoiTuan, apDungNgayLe);
+                    const apDungTheoGio = seatData?.suatChieu?.apDungPhuPhiTheoGio ?? true;
+                    return sum + tinhGiaVe(giaCoBan, ghe?.loaiGhe, gioBatDau, ngayChieu, dsNgayLe, apDungCuoiTuan, apDungNgayLe, apDungTheoGio);
                   }, 0)
                 ).toLocaleString('vi-VN')}{' '}
                 đ

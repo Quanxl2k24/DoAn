@@ -37,7 +37,7 @@ const PaymentPage = () => {
           suatChieu: data.suatChieu,
           phong: data.phong,
           ghes: selectedGhes,
-          ngayLes: data.ngayLes,
+          ngayLes: data.danhSachNgayLe,
         });
       } catch (err) {
         console.error('Lỗi tải thông tin thanh toán:', err);
@@ -264,10 +264,11 @@ const PaymentPage = () => {
                       const giaCoBan = bookingInfo.suatChieu?.giaSuatChieu || bookingInfo.phim?.giaCoBan || 0;
                       const ngayChieu = new Date(bookingInfo.suatChieu?.thoiGianBatDau);
                       const gioBatDau = ngayChieu.getHours();
-                      const phuPhiTime = tinhPhuPhiTheoGio(gioBatDau);
                       const dsNgayLe = bookingInfo.ngayLes || [];
                       const apDungCuoiTuan = bookingInfo.suatChieu?.apDungPhuPhiCuoiTuan ?? true;
                       const apDungNgayLe = bookingInfo.suatChieu?.apDungPhuPhiNgayLe ?? true;
+                      const apDungTheoGio = bookingInfo.suatChieu?.apDungPhuPhiTheoGio ?? true;
+                      const phuPhiTime = apDungTheoGio ? tinhPhuPhiTheoGio(gioBatDau) : 0;
 
                       // Find holiday name
                       const target = new Date(ngayChieu);
@@ -313,7 +314,7 @@ const PaymentPage = () => {
                                 )}
                               </span>
                               <span className="font-bold text-on-surface text-xs">
-                                {tinhGiaVe(giaCoBan, g.loaiGhe, gioBatDau, ngayChieu, dsNgayLe, apDungCuoiTuan, apDungNgayLe).toLocaleString('vi-VN')}đ
+                                {tinhGiaVe(giaCoBan, g.loaiGhe, gioBatDau, ngayChieu, dsNgayLe, apDungCuoiTuan, apDungNgayLe, apDungTheoGio).toLocaleString('vi-VN')}đ
                               </span>
                             </div>
                           ))}

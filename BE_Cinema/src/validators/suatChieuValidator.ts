@@ -12,8 +12,7 @@ export const createSuatChieuSchema = Joi.object({
     "date.format": "Thời gian không đúng định dạng ISO",
   }),
   giaSuatChieu: Joi.number().optional(),
-  heSoGia: Joi.number().min(0.5).max(3.0).optional().messages({
-    "number.min": "Hệ số giá không được nhỏ hơn 0.5",
-    "number.max": "Hệ số giá không được lớn hơn 3.0",
-  }),
+  apDungPhuPhiCuoiTuan: Joi.boolean().optional(),
+  apDungPhuPhiNgayLe: Joi.boolean().optional(),
+  apDungPhuPhiTheoGio: Joi.boolean().optional(),
 });

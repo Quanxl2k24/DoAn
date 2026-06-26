@@ -63,7 +63,7 @@ export const createSuatChieu = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { phimId, phongId, thoiGianBatDau, giaSuatChieu, heSoGia } = req.body;
+    const { phimId, phongId, thoiGianBatDau, giaSuatChieu, apDungPhuPhiCuoiTuan, apDungPhuPhiNgayLe, apDungPhuPhiTheoGio } = req.body;
     const phim = await prisma.phim.findUnique({ where: { id: phimId } });
     if (!phim) {
       res.status(404).json({ message: "Không tìm thấy phim" });
@@ -102,7 +102,9 @@ export const createSuatChieu = async (
         thoiGianBatDau: start, 
         thoiGianKetThuc: end,
         giaSuatChieu: giaSuatChieu ? parseFloat(giaSuatChieu) : phim.giaCoBan,
-        heSoGia: heSoGia ? parseFloat(heSoGia) : 1.0,
+        apDungPhuPhiCuoiTuan: apDungPhuPhiCuoiTuan !== undefined ? apDungPhuPhiCuoiTuan : true,
+        apDungPhuPhiNgayLe: apDungPhuPhiNgayLe !== undefined ? apDungPhuPhiNgayLe : true,
+        apDungPhuPhiTheoGio: apDungPhuPhiTheoGio !== undefined ? apDungPhuPhiTheoGio : true,
       },
     });
 

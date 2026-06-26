@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prisma";
+import { tinhGiaVe } from "../../utils/pricing";
 
 export const datVe = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -62,12 +63,34 @@ export const datVe = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Calculate total (with price multiplier)
-    const heSoGia = suatChieu.heSoGia || 1.0;
-    const tongTien = ghes.reduce(
-      (sum, ghe) => sum + Math.round((suatChieu.giaSuatChieu || suatChieu.phim.giaCoBan) * heSoGia) + ghe.loaiGhe.phuPhi,
-      0
-    );
+    // Fetch holidays
+    const danhSachNgayLe = await prisma.ngayLe.findMany();
+    const ngayChieu = suatChieu.thoiGianBatDau;
+    const gioBatDau = ngayChieu.getHours();
+
+    // Calculate total (additive formula)
+    const giaCoBan = suatChieu.giaSuatChieu || suatChieu.phim.giaCoBan;
+    let tongTien = 0;
+    const chiTietGia: any[] = [];
+    for (const ghe of ghes) {
+      const giaVe = tinhGiaVe(
+        giaCoBan,
+        ghe.loaiGhe.tenLoai,
+        gioBatDau,
+        ngayChieu,
+        danhSachNgayLe.map((nl) => nl.ngay),
+        suatChieu.apDungPhuPhiCuoiTuan,
+        suatChieu.apDungPhuPhiNgayLe,
+        suatChieu.apDungPhuPhiTheoGio
+      );
+      tongTien += Math.round(giaVe);
+      chiTietGia.push({
+        gheId: ghe.id,
+        tenGhe: ghe.tenGhe,
+        loaiGhe: ghe.loaiGhe.tenLoai,
+        giaVe: Math.round(giaVe),
+      });
+    }
 
     // Create payment
     const thanhToan = await prisma.thanhToan.create({
@@ -80,16 +103,15 @@ export const datVe = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Create tickets
-    const giaCoBan = Math.round((suatChieu.giaSuatChieu || suatChieu.phim.giaCoBan) * heSoGia);
     const ves = await Promise.all(
-      ghes.map((ghe) =>
+      ghes.map((ghe, idx) =>
         prisma.ve.create({
           data: {
             userId,
             suatChieuId,
             gheId: ghe.id,
             thanhToanId: thanhToan.id,
-            giaTien: giaCoBan + ghe.loaiGhe.phuPhi,
+            giaTien: chiTietGia[idx].giaVe,
             trangThai: "DA_DAT",
           },
         })
@@ -107,12 +129,10 @@ export const datVe = async (req: Request, res: Response): Promise<void> => {
       data: { trangThai: "DA_MUA" },
     });
 
-    const chiTiet = ghes.map((ghe) => ({
+    const chiTiet = ghes.map((ghe, idx) => ({
       ...ghe,
       loaiGhe: ghe.loaiGhe,
-      giaCoBan,
-      phuPhi: ghe.loaiGhe.phuPhi,
-      thanhTien: giaCoBan + ghe.loaiGhe.phuPhi,
+      thanhTien: chiTietGia[idx].giaVe,
     }));
 
     res.status(201).json({

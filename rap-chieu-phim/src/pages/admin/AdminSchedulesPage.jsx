@@ -34,6 +34,7 @@ const AdminSchedulesPage = () => {
     thoiGianBatDau: '',
     apDungPhuPhiCuoiTuan: true,
     apDungPhuPhiNgayLe: true,
+    apDungPhuPhiTheoGio: true,
   });
 
   // Holiday management
@@ -176,6 +177,7 @@ const AdminSchedulesPage = () => {
       thoiGianBatDau: new Date(form.thoiGianBatDau).toISOString(),
       apDungPhuPhiCuoiTuan: form.apDungPhuPhiCuoiTuan,
       apDungPhuPhiNgayLe: form.apDungPhuPhiNgayLe,
+      apDungPhuPhiTheoGio: form.apDungPhuPhiTheoGio,
     };
 
     try {
@@ -183,7 +185,7 @@ const AdminSchedulesPage = () => {
       toast.success('Thêm suất chiếu thành công');
       setShowForm(false);
       // Reset form
-      setForm({ phimId: '', phongId: '', thoiGianBatDau: '', apDungPhuPhiCuoiTuan: true, apDungPhuPhiNgayLe: true });
+      setForm({ phimId: '', phongId: '', thoiGianBatDau: '', apDungPhuPhiCuoiTuan: true, apDungPhuPhiNgayLe: true, apDungPhuPhiTheoGio: true });
       setSelectedRap('');
       fetchSchedules();
     } catch (error) {
@@ -286,8 +288,19 @@ const AdminSchedulesPage = () => {
 
             {/* Pricing Toggles */}
             <div className="md:col-span-2 bg-surface-container-high rounded-xl p-4 border border-white/5">
-              <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-3">CẤU HÌNH PHỤ PHÍ NGÀY</p>
+              <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-3">CẤU HÌNH PHỤ PHÍ</p>
               <div className="space-y-3">
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <span className="text-sm font-bold text-on-surface">Phụ phí theo giờ</span>
+                    <p className="text-[10px] text-secondary">17h-22h: <span className="text-[#E50914] font-bold">+{PHU_PHI_17H_DEN_22H.toLocaleString('vi-VN')}₫</span> | Sau 22h: <span className="text-[#E50914] font-bold">+{PHU_PHI_SAU_22H.toLocaleString('vi-VN')}₫</span></p>
+                  </div>
+                  <div className={`relative w-12 h-7 rounded-full transition-colors ${form.apDungPhuPhiTheoGio ? 'bg-[#E50914]' : 'bg-gray-600'}`}
+                    onClick={() => setForm({ ...form, apDungPhuPhiTheoGio: !form.apDungPhuPhiTheoGio })}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white transition-transform ${form.apDungPhuPhiTheoGio ? 'translate-x-5' : ''}`} />
+                  </div>
+                </label>
                 <label className="flex items-center justify-between cursor-pointer">
                   <div>
                     <span className="text-sm font-bold text-on-surface">Phụ phí cuối tuần</span>
@@ -367,7 +380,7 @@ const AdminSchedulesPage = () => {
                   const ngayChieu = new Date(form.thoiGianBatDau);
                   const gioBatDau = ngayChieu.getHours();
                   const thu = ngayChieu.getDay();
-                  const phuPhiTime = tinhPhuPhiTheoGio(gioBatDau);
+                  const phuPhiTime = form.apDungPhuPhiTheoGio ? tinhPhuPhiTheoGio(gioBatDau) : 0;
                   const holiday = isHoliday(form.thoiGianBatDau);
                   const phuPhiNgay = holiday && form.apDungPhuPhiNgayLe ? 25000
                     : form.apDungPhuPhiCuoiTuan && (thu === 6 || thu === 0) ? PHU_PHI_THU_7_CHU_NHAT

@@ -28,6 +28,11 @@ export const getTrangThaiGhe = async (
       return;
     }
 
+    // Get holidays
+    const danhSachNgayLe = await prisma.ngayLe.findMany({
+      select: { id: true, tenNgayLe: true, ngay: true },
+    });
+
     // Get locked seats
     const lockedSeats = await prisma.giuGhe.findMany({
       where: {
@@ -72,18 +77,22 @@ export const getTrangThaiGhe = async (
           thoiGianBatDau: suatChieu.thoiGianBatDau,
           thoiGianKetThuc: suatChieu.thoiGianKetThuc,
           giaSuatChieu: suatChieu.giaSuatChieu || suatChieu.phim.giaCoBan,
-          heSoGia: suatChieu.heSoGia || 1.0,
+          apDungPhuPhiCuoiTuan: suatChieu.apDungPhuPhiCuoiTuan,
+          apDungPhuPhiNgayLe: suatChieu.apDungPhuPhiNgayLe,
+          apDungPhuPhiTheoGio: suatChieu.apDungPhuPhiTheoGio,
         },
         phim: {
           id: suatChieu.phim.id,
           tenPhim: suatChieu.phim.tenPhim,
           giaCoBan: suatChieu.phim.giaCoBan,
+          dinhDang: suatChieu.phim.dinhDang,
         },
         phong: {
           id: suatChieu.phong.id,
           tenPhong: suatChieu.phong.tenPhong,
         },
         ghes,
+        danhSachNgayLe,
       },
     });
   } catch (error) {

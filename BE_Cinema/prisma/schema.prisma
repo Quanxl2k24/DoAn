@@ -77,6 +77,7 @@ model Phim {
   dienVien      String?
   phanLoaiTuoi  String
   giaCoBan      Float
+  dinhDang      String      @default("2D")
   trangThai     String      @default("DANG_CHIEU")
   suatChieus    SuatChieu[]
 }
@@ -103,17 +104,19 @@ model Ghe {
 }
 
 model SuatChieu {
-  id              String     @id @default(uuid())
-  phimId          String
-  phongId         String
-  thoiGianBatDau  DateTime
-  thoiGianKetThuc DateTime
-  giaSuatChieu    Float?
-  heSoGia         Float      @default(1.0)
-  giuGhes         GiuGhe[]
-  phim            Phim       @relation(fields: [phimId], references: [id])
-  phong           PhongChieu @relation(fields: [phongId], references: [id])
-  ves             Ve[]
+  id                   String     @id @default(uuid())
+  phimId               String
+  phongId              String
+  thoiGianBatDau       DateTime
+  thoiGianKetThuc      DateTime
+  giaSuatChieu         Float?
+  apDungPhuPhiCuoiTuan Boolean    @default(true)
+  apDungPhuPhiNgayLe   Boolean    @default(true)
+  apDungPhuPhiTheoGio  Boolean    @default(true)
+  giuGhes              GiuGhe[]
+  phim                 Phim       @relation(fields: [phimId], references: [id])
+  phong                PhongChieu @relation(fields: [phongId], references: [id])
+  ves                  Ve[]
 }
 
 model GiuGhe {
@@ -138,6 +141,12 @@ model ThanhToan {
   thoiGian   DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id])
   ves        Ve[]
+}
+
+model NgayLe {
+  id        String   @id @default(uuid())
+  tenNgayLe String
+  ngay      DateTime
 }
 
 model Ve {
