@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { tinhGiaVe, tinhPhuPhiTheoGio, tinhPhuPhiTheoNgay, tinhPhuPhiNgayLe } from '../utils/pricing';
 
 const PaymentPage = () => {
   const [searchParams] = useSearchParams();
@@ -36,6 +37,7 @@ const PaymentPage = () => {
           suatChieu: data.suatChieu,
           phong: data.phong,
           ghes: selectedGhes,
+          ngayLes: data.ngayLes,
         });
       } catch (err) {
         console.error('Lỗi tải thông tin thanh toán:', err);
@@ -258,22 +260,66 @@ const PaymentPage = () => {
                   </div>
                   <div className="border-t border-white/5 pt-3">
                     <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-3">Chi tiết giá</p>
-                    {bookingInfo.ghes.map((g) => (
-                      <div key={g.id} className="flex justify-between items-center py-1.5">
-                        <span className="text-secondary text-xs">
-                          {g.tenGhe}
-                          {g.phuPhi > 0 && (
-                            <span className="text-[#E50914] ml-1">({g.loaiGhe})</span>
+                    {(() => {
+                      const giaCoBan = bookingInfo.suatChieu?.giaSuatChieu || bookingInfo.phim?.giaCoBan || 0;
+                      const ngayChieu = new Date(bookingInfo.suatChieu?.thoiGianBatDau);
+                      const gioBatDau = ngayChieu.getHours();
+                      const phuPhiTime = tinhPhuPhiTheoGio(gioBatDau);
+                      const dsNgayLe = bookingInfo.ngayLes || [];
+                      const apDungCuoiTuan = bookingInfo.suatChieu?.apDungPhuPhiCuoiTuan ?? true;
+                      const apDungNgayLe = bookingInfo.suatChieu?.apDungPhuPhiNgayLe ?? true;
+
+                      // Find holiday name
+                      const target = new Date(ngayChieu);
+                      target.setHours(0, 0, 0, 0);
+                      const holiday = dsNgayLe.find(h => {
+                        const hd = new Date(h.ngay);
+                        hd.setHours(0, 0, 0, 0);
+                        return target.getTime() === hd.getTime();
+                      });
+
+                      const phuPhiNgay = apDungNgayLe && holiday
+                        ? 25000
+                        : apDungCuoiTuan
+                          ? tinhPhuPhiTheoNgay(ngayChieu)
+                          : 0;
+                      const phuPhiNgayLabel = holiday ? holiday.tenNgayLe
+                        : phuPhiNgay > 0 ? 'Cuối tuần'
+                        : '';
+                      return (
+                        <>
+                          <div className="flex justify-between items-center py-1">
+                            <span className="text-secondary text-xs">Giá cơ bản</span>
+                            <span className="font-bold text-on-surface text-xs">{giaCoBan.toLocaleString('vi-VN')}đ</span>
+                          </div>
+                          {phuPhiTime > 0 && (
+                            <div className="flex justify-between items-center py-1">
+                              <span className="text-secondary text-xs">Phụ phí giờ chiếu</span>
+                              <span className="font-bold text-on-surface text-xs">+{phuPhiTime.toLocaleString('vi-VN')}đ</span>
+                            </div>
                           )}
-                        </span>
-                        <span className="font-bold text-on-surface text-xs">
-                          {Math.round((bookingInfo.suatChieu?.giaSuatChieu || bookingInfo.phim?.giaCoBan || 120000) * (bookingInfo.suatChieu?.heSoGia || 1)).toLocaleString('vi-VN')}đ
-                          {g.phuPhi > 0 && (
-                            <span className="text-[#E50914]"> +{g.phuPhi.toLocaleString('vi-VN')}đ</span>
+                          {phuPhiNgay > 0 && (
+                            <div className="flex justify-between items-center py-1">
+                              <span className="text-secondary text-xs">Phụ phí ngày chiếu ({phuPhiNgayLabel})</span>
+                              <span className="font-bold text-on-surface text-xs">+{phuPhiNgay.toLocaleString('vi-VN')}đ</span>
+                            </div>
                           )}
-                        </span>
-                      </div>
-                    ))}
+                          {bookingInfo.ghes.map((g) => (
+                            <div key={g.id} className="flex justify-between items-center py-1">
+                              <span className="text-secondary text-xs">
+                                {g.tenGhe}
+                                {g.phuPhi > 0 && (
+                                  <span className="text-[#E50914] ml-1">({g.loaiGhe})</span>
+                                )}
+                              </span>
+                              <span className="font-bold text-on-surface text-xs">
+                                {tinhGiaVe(giaCoBan, g.loaiGhe, gioBatDau, ngayChieu, dsNgayLe, apDungCuoiTuan, apDungNgayLe).toLocaleString('vi-VN')}đ
+                              </span>
+                            </div>
+                          ))}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               )}

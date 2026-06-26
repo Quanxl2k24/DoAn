@@ -15,7 +15,7 @@ const AdminMoviesPage = () => {
   const [form, setForm] = useState({
     tenPhim: '', moTa: '', posterUrl: '', backdropUrl: '', thoiLuong: 120,
     ngayKhoiChieu: '', theLoai: '', ngonNgu: 'Phụ đề Tiếng Việt',
-    daoDien: '', phanLoaiTuoi: 'P', giaCoBan: 100000, trangThai: 'DANG_CHIEU',
+    daoDien: '', phanLoaiTuoi: 'P', giaCoBan: 60000, dinhDang: '2D', trangThai: 'DANG_CHIEU',
   });
 
   useEffect(() => { fetchMovies(); }, []);
@@ -68,7 +68,7 @@ const AdminMoviesPage = () => {
       backdropUrl: movie.backdropUrl || '', thoiLuong: movie.thoiLuong,
       ngayKhoiChieu: movie.ngayKhoiChieu?.slice(0, 10) || '', theLoai: movie.theLoai,
       ngonNgu: movie.ngonNgu, daoDien: movie.daoDien || '',
-      phanLoaiTuoi: movie.phanLoaiTuoi, giaCoBan: movie.giaCoBan, trangThai: movie.trangThai,
+      phanLoaiTuoi: movie.phanLoaiTuoi, giaCoBan: movie.giaCoBan, dinhDang: movie.dinhDang || '2D', trangThai: movie.trangThai,
     });
     setShowForm(true);
   };
@@ -87,7 +87,7 @@ const AdminMoviesPage = () => {
   const resetForm = () => setForm({
     tenPhim: '', moTa: '', posterUrl: '', backdropUrl: '', thoiLuong: 120,
     ngayKhoiChieu: '', theLoai: '', ngonNgu: 'Phụ đề Tiếng Việt',
-    daoDien: '', phanLoaiTuoi: 'P', giaCoBan: 100000, trangThai: 'DANG_CHIEU',
+    daoDien: '', phanLoaiTuoi: 'P', giaCoBan: 60000, dinhDang: '2D', trangThai: 'DANG_CHIEU',
   });
 
   return (
@@ -131,9 +131,49 @@ const AdminMoviesPage = () => {
                 className="w-full bg-white text-black px-4 py-2 rounded-lg border border-white/5">
                 <option value="P">P</option><option value="C13">C13</option><option value="C16">C16</option><option value="T18">T18</option>
               </select></div>
-            <div><label className="block text-sm font-bold mb-1">Giá cơ bản</label>
+            <div><label className="block text-sm font-bold mb-1">Định dạng</label>
+              <select value={form.dinhDang} onChange={(e) => {
+                const newGiaCoBan = e.target.value === '3D' ? 80000 : 60000;
+                setForm({ ...form, dinhDang: e.target.value, giaCoBan: newGiaCoBan });
+              }} className="w-full bg-white text-black px-4 py-2 rounded-lg border border-white/5">
+                <option value="2D">2D</option><option value="3D">3D</option>
+              </select></div>
+            <div><label className="block text-sm font-bold mb-1">Giá cơ bản (VNĐ)</label>
               <input type="number" value={form.giaCoBan} onChange={(e) => setForm({ ...form, giaCoBan: Number(e.target.value) })}
                 className="w-full bg-white text-black px-4 py-2 rounded-lg border border-white/5" required /></div>
+            <div className="col-span-2 bg-surface-container-high rounded-xl p-4 border border-white/5">
+              <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-2">ƯỚC TÍNH GIÁ VÉ</p>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-secondary">Giá cơ bản ({form.dinhDang})</span>
+                  <span className="font-bold text-on-surface">{Number(form.giaCoBan).toLocaleString('vi-VN')}₫</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-secondary">Phụ phí ghế VIP</span>
+                  <span className="font-bold text-on-surface">+20,000₫</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-secondary">Phụ phí ghế Đôi</span>
+                  <span className="font-bold text-on-surface">+40,000₫</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-secondary">Phụ phí giờ (17h-22h)</span>
+                  <span className="font-bold text-on-surface">+15,000₫</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-secondary">Phụ phí cuối tuần (T7-CN)</span>
+                  <span className="font-bold text-on-surface">+15,000₫</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-white/10">
+                  <span className="font-bold text-on-surface">Giá vé VIP khung giờ vàng</span>
+                  <span className="font-black text-[#E50914]">{(Number(form.giaCoBan) + 20000 + 15000 + 15000).toLocaleString('vi-VN')}₫</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-bold text-on-surface">Giá vé Đôi khung giờ vàng</span>
+                  <span className="font-black text-[#E50914]">{(Number(form.giaCoBan) + 40000 + 15000 + 15000).toLocaleString('vi-VN')}₫</span>
+                </div>
+              </div>
+            </div>
             <div><label className="block text-sm font-bold mb-1">Trạng thái</label>
               <select value={form.trangThai} onChange={(e) => setForm({ ...form, trangThai: e.target.value })}
                 className="w-full bg-white text-black px-4 py-2 rounded-lg border border-white/5">

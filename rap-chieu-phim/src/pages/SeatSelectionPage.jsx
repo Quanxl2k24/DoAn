@@ -5,6 +5,7 @@ import Skeleton from '../components/Skeleton';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { tinhGiaVe, tinhPhuPhiLoaiGhe } from '../utils/pricing';
 
 const SeatSelectionPage = () => {
   const [searchParams] = useSearchParams();
@@ -123,14 +124,16 @@ const SeatSelectionPage = () => {
   };
 
   const navigateToPayment = (gheIds, holdUntilTime) => {
-    const basePrice = seatData?.suatChieu?.giaSuatChieu || seatData?.phim?.giaCoBan || 120000;
-    const heSoGia = seatData?.suatChieu?.heSoGia || 1.0;
-    const adjustedPrice = Math.round(basePrice * heSoGia);
+    const giaCoBan = seatData?.suatChieu?.giaSuatChieu || seatData?.phim?.giaCoBan || 0;
+    const ngayChieu = new Date(seatData?.suatChieu?.thoiGianBatDau);
+    const gioBatDau = ngayChieu.getHours();
     const selectedGhes = seatData?.ghes?.filter((g) => gheIds.includes(g.id)) || [];
-    const total = selectedGhes.reduce(
-      (sum, g) => sum + adjustedPrice + (g.phuPhi || 0),
-      0
-    );
+    const dsNgayLe = seatData?.ngayLes || [];
+    const apDungCuoiTuan = seatData?.suatChieu?.apDungPhuPhiCuoiTuan ?? true;
+    const apDungNgayLe = seatData?.suatChieu?.apDungPhuPhiNgayLe ?? true;
+    const total = selectedGhes.reduce((sum, g) => {
+      return sum + tinhGiaVe(giaCoBan, g.loaiGhe, gioBatDau, ngayChieu, dsNgayLe, apDungCuoiTuan, apDungNgayLe);
+    }, 0);
     navigate(
       `/payment?suatChieuId=${suatChieuId}&gheIds=${gheIds.join(',')}&total=${total}&holdUntil=${holdUntilTime}`
     );
@@ -356,10 +359,14 @@ const SeatSelectionPage = () => {
               <span className="font-black text-2xl text-[#E50914]">
                 {(selectedSeats
                   .reduce((sum, id) => {
-                    const basePrice = seatData?.suatChieu?.giaSuatChieu || seatData?.phim?.giaCoBan || 120000;
-                    const heSoGia = seatData?.suatChieu?.heSoGia || 1.0;
+                    const giaCoBan = seatData?.suatChieu?.giaSuatChieu || seatData?.phim?.giaCoBan || 0;
                     const ghe = seatData.ghes.find((g) => g.id === id);
-                    return sum + Math.round(basePrice * heSoGia) + (ghe?.phuPhi || 0);
+                    const ngayChieu = new Date(seatData?.suatChieu?.thoiGianBatDau);
+                    const gioBatDau = ngayChieu.getHours();
+                    const dsNgayLe = seatData?.ngayLes || [];
+                    const apDungCuoiTuan = seatData?.suatChieu?.apDungPhuPhiCuoiTuan ?? true;
+                    const apDungNgayLe = seatData?.suatChieu?.apDungPhuPhiNgayLe ?? true;
+                    return sum + tinhGiaVe(giaCoBan, ghe?.loaiGhe, gioBatDau, ngayChieu, dsNgayLe, apDungCuoiTuan, apDungNgayLe);
                   }, 0)
                 ).toLocaleString('vi-VN')}{' '}
                 đ
