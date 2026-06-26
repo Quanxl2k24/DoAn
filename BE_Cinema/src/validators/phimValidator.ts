@@ -33,6 +33,7 @@ export const createPhimSchema = Joi.object({
   giaCoBan: Joi.number().min(0).required().messages({
     "any.required": "Giá cơ bản là bắt buộc",
   }),
+  dinhDang: Joi.string().valid("2D", "3D").default("2D"),
   trangThai: Joi.string()
     .valid("DANG_CHIEU", "SAP_CHIEU", "NGUNG_CHIEU")
     .default("DANG_CHIEU"),
@@ -52,5 +53,6 @@ export const updatePhimSchema = Joi.object({
   dienVien: Joi.string().allow("", null),
   phanLoaiTuoi: Joi.string(),
   giaCoBan: Joi.number().min(0),
+  dinhDang: Joi.string().valid("2D", "3D"),
   trangThai: Joi.string().valid("DANG_CHIEU", "SAP_CHIEU", "NGUNG_CHIEU"),
 });
