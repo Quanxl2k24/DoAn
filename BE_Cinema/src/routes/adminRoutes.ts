@@ -5,6 +5,7 @@ import {
   getWeeklyRevenue,
   getTopMovies,
 } from "../controllers/admin/adminController";
+import { createNgayLe, deleteNgayLe } from "../controllers/ngayLeController";
 import { authenticateToken } from "../middlewares/authMiddleware";
 import { requireRole } from "../middlewares/roleMiddleware";
 
@@ -90,5 +91,8 @@ router.get("/analytics/weekly-revenue", authenticateToken, requireRole("ADMIN"),
  *         description: Top phim
  */
 router.get("/analytics/top-movies", authenticateToken, requireRole("ADMIN"), getTopMovies);
+
+router.post("/ngay-les", authenticateToken, requireRole("ADMIN"), createNgayLe);
+router.delete("/ngay-les/:id", authenticateToken, requireRole("ADMIN"), deleteNgayLe);
 
 export default router;

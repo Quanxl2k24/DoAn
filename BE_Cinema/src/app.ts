@@ -15,6 +15,7 @@ import gheRoutes from './routes/gheRoutes';
 import loaiGheRoutes from './routes/loaiGheRoutes';
 import datVeRoutes from './routes/datVeRoutes';
 import adminRoutes from './routes/adminRoutes';
+import ngayLeRoutes from './routes/ngayLeRoutes';
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use('/api/suat-chieus', suatChieuRoutes);
 app.use('/api/ghes', gheRoutes);
 app.use('/api/loai-ghes', loaiGheRoutes);
 app.use('/api/dat-ve', datVeRoutes);
+app.use('/api/ngay-les', ngayLeRoutes);
 app.use('/api/admin', adminRoutes);
 
 export default app;
