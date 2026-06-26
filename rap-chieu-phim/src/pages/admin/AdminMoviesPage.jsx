@@ -43,19 +43,23 @@ const AdminMoviesPage = () => {
       if (editMovie) {
         await api.put(`/phims/${editMovie.id}`, submitData);
         toast.success('Cập nhật phim thành công');
+        setShowForm(false);
+        setEditMovie(null);
+        resetForm();
+        fetchMovies();
       } else {
         const res = await api.post('/phims', submitData);
         toast.success('Thêm phim thành công');
-        // Prompt to add schedule
-        if (window.confirm('Phim đã được tạo! Bạn có muốn lên lịch chiếu cho phim này ngay bây giờ không?')) {
-          navigate(`/admin/schedules?phimId=${res.data.data.id}`);
-          return;
-        }
+        setShowForm(false);
+        setEditMovie(null);
+        resetForm();
+        fetchMovies();
+        setTimeout(() => {
+          if (window.confirm('Phim đã được tạo! Bạn có muốn lên lịch chiếu cho phim này ngay bây giờ không?')) {
+            navigate(`/admin/schedules?phimId=${res.data.data.id}`);
+          }
+        }, 2000);
       }
-      setShowForm(false);
-      setEditMovie(null);
-      resetForm();
-      fetchMovies();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Lỗi');
     }
