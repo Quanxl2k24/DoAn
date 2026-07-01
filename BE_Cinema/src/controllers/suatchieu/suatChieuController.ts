@@ -115,6 +115,88 @@ export const createSuatChieu = async (
   }
 };
 
+export const updateSuatChieu = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    const existing = await prisma.suatChieu.findUnique({
+      where: { id },
+      include: { phim: true },
+    });
+    if (!existing) {
+      res.status(404).json({ message: "Không tìm thấy suất chiếu" });
+      return;
+    }
+
+    const veCount = await prisma.ve.count({
+      where: { suatChieuId: id, trangThai: "DA_DAT" },
+    });
+    if (veCount > 0) {
+      res.status(400).json({
+        message: "Suất chiếu đã có giao dịch phát sinh, không thể chỉnh sửa",
+      });
+      return;
+    }
+
+    const { phimId, phongId, thoiGianBatDau, giaSuatChieu, apDungPhuPhiCuoiTuan, apDungPhuPhiNgayLe, apDungPhuPhiTheoGio } = req.body;
+
+    const data: any = {};
+    let finalPhimId = phimId || existing.phimId;
+    let finalStart = thoiGianBatDau ? new Date(thoiGianBatDau) : existing.thoiGianBatDau;
+
+    if (phimId) data.phimId = phimId;
+    if (phongId) data.phongId = phongId;
+    if (thoiGianBatDau) data.thoiGianBatDau = finalStart;
+    if (giaSuatChieu !== undefined) data.giaSuatChieu = parseFloat(giaSuatChieu);
+    if (apDungPhuPhiCuoiTuan !== undefined) data.apDungPhuPhiCuoiTuan = apDungPhuPhiCuoiTuan;
+    if (apDungPhuPhiNgayLe !== undefined) data.apDungPhuPhiNgayLe = apDungPhuPhiNgayLe;
+    if (apDungPhuPhiTheoGio !== undefined) data.apDungPhuPhiTheoGio = apDungPhuPhiTheoGio;
+
+    const phim = await prisma.phim.findUnique({ where: { id: finalPhimId } });
+    if (!phim) {
+      res.status(404).json({ message: "Không tìm thấy phim" });
+      return;
+    }
+
+    const finalEnd = new Date(finalStart.getTime() + phim.thoiLuong * 60000);
+    const endWithBuffer = new Date(finalEnd.getTime() + 15 * 60000);
+    data.thoiGianKetThuc = finalEnd;
+
+    const overlap = await prisma.suatChieu.findFirst({
+      where: {
+        id: { not: id },
+        phongId: phongId || existing.phongId,
+        OR: [
+          {
+            thoiGianBatDau: { lt: endWithBuffer },
+            thoiGianKetThuc: { gt: finalStart },
+          },
+        ],
+      },
+      include: { phim: true },
+    });
+
+    if (overlap) {
+      res.status(400).json({
+        message: `Trùng lịch với phim "${overlap.phim.tenPhim}" (${new Date(overlap.thoiGianBatDau).toLocaleTimeString()} - ${new Date(overlap.thoiGianKetThuc).toLocaleTimeString()}). Vui lòng chọn khung giờ khác.`,
+      });
+      return;
+    }
+
+    const suatChieu = await prisma.suatChieu.update({
+      where: { id },
+      data,
+    });
+
+    res.status(200).json({ message: "Cập nhật suất chiếu thành công", data: suatChieu });
+  } catch (error) {
+    console.error("Update SuatChieu Error:", error);
+    res.status(500).json({ message: "Lỗi máy chủ nội bộ" });
+  }
+};
+
 export const deleteSuatChieu = async (
   req: Request,
   res: Response
@@ -126,6 +208,17 @@ export const deleteSuatChieu = async (
       res.status(404).json({ message: "Không tìm thấy suất chiếu" });
       return;
     }
+
+    const veCount = await prisma.ve.count({
+      where: { suatChieuId: id, trangThai: "DA_DAT" },
+    });
+    if (veCount > 0) {
+      res.status(400).json({
+        message: "Suất chiếu đã có giao dịch phát sinh, không thể xoá",
+      });
+      return;
+    }
+
     await prisma.suatChieu.delete({ where: { id } });
     res.status(200).json({ message: "Xoá suất chiếu thành công" });
   } catch (error) {

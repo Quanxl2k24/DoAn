@@ -42,6 +42,12 @@ export const createRap = async (
   res: Response
 ): Promise<void> => {
   try {
+    const existingRap = await prisma.rapChieu.findFirst();
+    if (existingRap) {
+      res.status(400).json({ message: "Chỉ được tạo một rạp duy nhất" });
+      return;
+    }
+
     const { tenRap, diaChi } = req.body;
     const rap = await prisma.rapChieu.create({
       data: { tenRap, diaChi },
@@ -86,8 +92,7 @@ export const deleteRap = async (
       res.status(404).json({ message: "Không tìm thấy rạp" });
       return;
     }
-    await prisma.rapChieu.delete({ where: { id } });
-    res.status(200).json({ message: "Xoá rạp thành công" });
+    res.status(400).json({ message: "Không thể xoá rạp. Hệ thống chỉ cho phép một rạp duy nhất." });
   } catch (error) {
     console.error("Delete Rap Error:", error);
     res.status(500).json({ message: "Lỗi máy chủ nội bộ" });

@@ -24,6 +24,7 @@ const AdminSchedulesPage = () => {
 
   // Form states
   const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [phims, setPhims] = useState([]);
   const [raps, setRaps] = useState([]);
   const [phongs, setPhongs] = useState([]);
@@ -163,6 +164,13 @@ const AdminSchedulesPage = () => {
     fetchPhongs();
   }, [selectedRap]);
 
+  const resetForm = () => {
+    setForm({ phimId: '', phongId: '', thoiGianBatDau: '', apDungPhuPhiCuoiTuan: true, apDungPhuPhiNgayLe: true, apDungPhuPhiTheoGio: true });
+    setSelectedRap('');
+    setEditId(null);
+    setShowForm(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.phimId || !form.phongId || !form.thoiGianBatDau) {
@@ -170,7 +178,6 @@ const AdminSchedulesPage = () => {
       return;
     }
     
-    // Convert to ISO-8601 for Prisma
     const submitData = {
       phimId: form.phimId,
       phongId: form.phongId,
@@ -181,19 +188,42 @@ const AdminSchedulesPage = () => {
     };
 
     try {
-      await api.post('/suat-chieus', submitData);
-      toast.success('Thêm suất chiếu thành công');
-      setShowForm(false);
-      // Reset form
-      setForm({ phimId: '', phongId: '', thoiGianBatDau: '', apDungPhuPhiCuoiTuan: true, apDungPhuPhiNgayLe: true, apDungPhuPhiTheoGio: true });
-      setSelectedRap('');
+      if (editId) {
+        await api.put(`/suat-chieus/${editId}`, submitData);
+        toast.success('Cập nhật suất chiếu thành công');
+      } else {
+        await api.post('/suat-chieus', submitData);
+        toast.success('Thêm suất chiếu thành công');
+      }
+      resetForm();
       fetchSchedules();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Lỗi thêm suất chiếu');
+      toast.error(error.response?.data?.message || 'Lỗi thao tác suất chiếu');
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleEdit = (sc) => {
+    const startLocal = new Date(sc.thoiGianBatDau);
+    const localISODate = new Date(startLocal.getTime() - startLocal.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    setForm({
+      phimId: sc.phimId,
+      phongId: sc.phongId,
+      thoiGianBatDau: localISODate,
+      apDungPhuPhiCuoiTuan: sc.apDungPhuPhiCuoiTuan,
+      apDungPhuPhiNgayLe: sc.apDungPhuPhiNgayLe,
+      apDungPhuPhiTheoGio: sc.apDungPhuPhiTheoGio,
+    });
+    setSelectedRap(sc.phong?.rapId || '');
+    setEditId(sc.id);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDelete = async (id, soGheDat) => {
+    if (soGheDat > 0) {
+      toast.error('Suất chiếu đã có giao dịch phát sinh, không thể xoá');
+      return;
+    }
     if (!confirm('Bạn có chắc chắn muốn xoá suất chiếu này?')) return;
     try {
       await api.delete(`/suat-chieus/${id}`);
@@ -231,7 +261,10 @@ const AdminSchedulesPage = () => {
                 className="bg-transparent text-black outline-none text-sm font-bold" />
             </div>
             <button 
-              onClick={() => setShowForm(!showForm)}
+              onClick={() => {
+                if (showForm) { resetForm(); }
+                else { setShowForm(true); }
+              }}
               className="bg-[#E50914] text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700 transition-colors flex items-center gap-2">
               <span className="material-symbols-outlined">{showForm ? 'close' : 'add'}</span>
               {showForm ? 'ĐÓNG' : 'THÊM SUẤT CHIẾU'}
@@ -241,6 +274,12 @@ const AdminSchedulesPage = () => {
 
         {showForm && (
           <form onSubmit={handleSubmit} className="bg-surface-container-low p-6 rounded-2xl border border-white/5 mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {editId && (
+              <div className="md:col-span-3 mb-2 px-3 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-500 text-sm font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">edit</span>
+                Đang chỉnh sửa suất chiếu
+              </div>
+            )}
             <div>
               <label className="block text-sm font-bold mb-1">Phim</label>
               <select 
@@ -426,9 +465,9 @@ const AdminSchedulesPage = () => {
 
             <div className="md:col-span-3 mt-2 flex gap-4">
               <button type="submit" className="bg-[#E50914] text-white px-8 py-3 rounded-xl font-bold hover:bg-red-700 transition-colors">
-                LƯU SUẤT CHIẾU
+                {editId ? 'CẬP NHẬT SUẤT CHIẾU' : 'LƯU SUẤT CHIẾU'}
               </button>
-              <button type="button" onClick={() => setShowForm(false)} className="bg-white/10 text-on-surface px-6 py-3 rounded-xl font-bold hover:bg-white/20 transition-colors border border-white/10">
+              <button type="button" onClick={resetForm} className="bg-white/10 text-on-surface px-6 py-3 rounded-xl font-bold hover:bg-white/20 transition-colors border border-white/10">
                 HUỶ
               </button>
             </div>
@@ -497,11 +536,25 @@ const AdminSchedulesPage = () => {
                           </span>
                         </td>
                         <td className="p-6 text-right">
-                          <button 
-                            onClick={() => handleDelete(sc.id)}
-                            className="w-10 h-10 rounded-full bg-white/5 hover:bg-[#E50914] text-white flex items-center justify-center transition-colors ml-auto">
-                            <span className="material-symbols-outlined text-[18px]">delete</span>
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleEdit(sc)}
+                              className="w-10 h-10 rounded-full bg-white/5 hover:bg-blue-500 text-white flex items-center justify-center transition-colors"
+                              title="Chỉnh sửa">
+                              <span className="material-symbols-outlined text-[18px]">edit</span>
+                            </button>
+                            <button
+                              onClick={() => handleDelete(sc.id, sc.soGheDat || 0)}
+                              disabled={(sc.soGheDat || 0) > 0}
+                              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                                (sc.soGheDat || 0) > 0
+                                  ? 'bg-gray-700/30 text-gray-500 cursor-not-allowed'
+                                  : 'bg-white/5 hover:bg-[#E50914] text-white'
+                              }`}
+                              title={(sc.soGheDat || 0) > 0 ? 'Đã có giao dịch, không thể xoá' : 'Xoá suất chiếu'}>
+                              <span className="material-symbols-outlined text-[18px]">delete</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

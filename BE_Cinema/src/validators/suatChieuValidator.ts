@@ -16,3 +16,17 @@ export const createSuatChieuSchema = Joi.object({
   apDungPhuPhiNgayLe: Joi.boolean().optional(),
   apDungPhuPhiTheoGio: Joi.boolean().optional(),
 });
+
+export const updateSuatChieuSchema = Joi.object({
+  phimId: Joi.string().optional(),
+  phongId: Joi.string().optional(),
+  thoiGianBatDau: Joi.date().iso().optional().messages({
+    "date.format": "Thời gian không đúng định dạng ISO",
+  }),
+  giaSuatChieu: Joi.number().optional(),
+  apDungPhuPhiCuoiTuan: Joi.boolean().optional(),
+  apDungPhuPhiNgayLe: Joi.boolean().optional(),
+  apDungPhuPhiTheoGio: Joi.boolean().optional(),
+}).min(1).messages({
+  "object.min": "Phải có ít nhất một trường để cập nhật",
+});

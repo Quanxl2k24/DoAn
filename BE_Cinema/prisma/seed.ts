@@ -96,15 +96,6 @@ async function main() {
       diaChi: "Tầng 5, Vincom Đồng Khởi, Quận 1, TP.HCM",
     },
   });
-  const rap2 = await prisma.rapChieu.upsert({
-    where: { id: "rap-02" },
-    update: {},
-    create: {
-      id: "rap-02",
-      tenRap: "Cine Première Lê Văn Việt",
-      diaChi: "Tầng 3, Vincom Lê Văn Việt, Quận 9, TP.HCM",
-    },
-  });
   console.log("✅ Cinemas created");
 
   // Rooms for rap1
@@ -115,18 +106,6 @@ async function main() {
       create: {
         id: `phong-rap1-${i}`,
         rapId: rap1.id,
-        tenPhong: `Rạp ${i}`,
-      },
-    });
-  }
-  // Rooms for rap2
-  for (let i = 1; i <= 2; i++) {
-    await prisma.phongChieu.upsert({
-      where: { id: `phong-rap2-${i}` },
-      update: {},
-      create: {
-        id: `phong-rap2-${i}`,
-        rapId: rap2.id,
         tenPhong: `Rạp ${i}`,
       },
     });
@@ -252,7 +231,6 @@ async function main() {
 
   // === 7. Showtimes ===
   const PHONG_IDS_RAP1 = ["phong-rap1-1", "phong-rap1-2", "phong-rap1-3", "phong-rap1-4"];
-  const PHONG_IDS_RAP2 = ["phong-rap2-1", "phong-rap2-2"];
   const today = new Date();
   const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
@@ -281,16 +259,7 @@ async function main() {
     { phimId: "phim-latmat7", phongId: PHONG_IDS_RAP1[2]!, hour: 19, minute: 45 },
   ];
 
-  // Suất chiếu cho rạp 2 (Cine Première Lê Văn Việt)
-  const showtimesRap2 = [
-    { phimId: "phim-dune", phongId: PHONG_IDS_RAP2[0]!, hour: 10, minute: 0 },
-    { phimId: "phim-dune", phongId: PHONG_IDS_RAP2[1]!, hour: 15, minute: 30 },
-    { phimId: "phim-bongde", phongId: PHONG_IDS_RAP2[0]!, hour: 18, minute: 0 },
-    { phimId: "phim-latmat7", phongId: PHONG_IDS_RAP2[1]!, hour: 20, minute: 0 },
-    { phimId: "phim-latmat7", phongId: PHONG_IDS_RAP2[0]!, hour: 22, minute: 30 },
-  ];
-
-  const allShowtimes = [...showtimesRap1, ...showtimesRap2];
+  const allShowtimes = showtimesRap1;
 
   for (let day = 0; day < 7; day++) {
     for (const st of allShowtimes) {
@@ -311,7 +280,7 @@ async function main() {
       });
     }
   }
-  console.log("✅ Showtimes created for 7 days (both cinemas)");
+  console.log("✅ Showtimes created for 7 days");
 
   console.log("🎉 Seed data hoàn tất!");
 }

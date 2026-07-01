@@ -88,12 +88,14 @@ const AdminTheatersPage = () => {
             <h1 className="font-headline text-3xl font-bold text-on-surface mb-2">Hệ thống rạp</h1>
             <p className="text-secondary opacity-70">Thêm, sửa hoặc xoá các cụm rạp trong hệ thống</p>
           </div>
-          <button 
-            onClick={() => { resetForm(); setShowModal(true); }}
-            className="bg-[#E50914] hover:bg-red-700 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors shadow-lg shadow-red-900/20">
-            <span className="material-symbols-outlined">add</span>
-            Thêm Rạp Mới
-          </button>
+          {raps.length === 0 && (
+            <button 
+              onClick={() => { resetForm(); setShowModal(true); }}
+              className="bg-[#E50914] hover:bg-red-700 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors shadow-lg shadow-red-900/20">
+              <span className="material-symbols-outlined">add</span>
+              Thêm Rạp Mới
+            </button>
+          )}
         </div>
 
         {loading ? (
@@ -131,11 +133,6 @@ const AdminTheatersPage = () => {
                             onClick={() => handleEdit(rap)}
                             className="p-2 text-secondary hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Chỉnh sửa">
                             <span className="material-symbols-outlined text-xl">edit</span>
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(rap.id)}
-                            className="p-2 text-secondary hover:text-[#E50914] hover:bg-[#E50914]/10 rounded-lg transition-colors" title="Xoá">
-                            <span className="material-symbols-outlined text-xl">delete</span>
                           </button>
                         </div>
                       </td>
